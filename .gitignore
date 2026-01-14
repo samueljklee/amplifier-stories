@@ -1,5 +1,8 @@
 # Local configuration (contains user-specific paths)
 .env.local
+__pycache__/
+*.pyc
+.amplifier/
 
 # OS files
 .DS_Store
