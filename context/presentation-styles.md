@@ -48,6 +48,18 @@ body {
     border-radius: 16px;
     padding: 28px;
 }
+
+.code-block {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px 28px;
+    font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre;  /* CRITICAL: Preserves line breaks and indentation */
+    overflow-x: auto;
+}
 ```
 
 ## Apple Keynote (Pure)

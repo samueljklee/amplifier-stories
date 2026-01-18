@@ -17,8 +17,9 @@ When asked to "tell a story about X" or "create a deck for Y":
 3. **Create** - Build a self-contained HTML deck following the style guide
 4. **Save** - Write to `docs/` with a descriptive filename
 5. **Update index** - Add the new deck to `docs/index.html` (see Index Maintenance below)
-6. **Wait for approval** - Don't deploy automatically
-7. **Deploy on request** - When user says "deploy" or "ship it", commit and push to GitHub
+6. **Auto-open** - Run `open docs/filename.html` to open in default browser for immediate review
+7. **Wait for approval** - Don't deploy automatically
+8. **Deploy on request** - When user says "deploy" or "ship it", commit and push to GitHub
 
 ## Index Maintenance
 
