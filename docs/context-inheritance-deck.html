@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Context Inheritance - Smarter Agent Delegation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .deck {
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Typography */
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #0A84FF;
+            margin-bottom: 20px;
+        }
+
+        .headline {
+            font-size: 72px;
+            font-weight: 700;
+            letter-spacing: -3px;
+            line-height: 1.05;
+            text-align: center;
+            max-width: 1000px;
+        }
+
+        .subhead {
+            font-size: 28px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.6);
+            margin-top: 24px;
+            text-align: center;
+            max-width: 700px;
+        }
+
+        .slide-title {
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        /* Content layouts */
+        .content-centered {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 1000px;
+        }
+
+        .content-left {
+            align-items: flex-start;
+            text-align: left;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* Problem slide */
+        .problem-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .agent-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 32px 48px;
+            text-align: center;
+        }
+
+        .agent-box.parent {
+            border-color: #0A84FF;
+        }
+
+        .agent-box.child {
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .agent-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .agent-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .agent-status {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 8px;
+        }
+
+        .arrow-broken {
+            font-size: 48px;
+            color: #FF453A;
+            position: relative;
+        }
+
+        .arrow-broken::after {
+            content: '✗';
+            position: absolute;
+            top: -10px;
+            right: -15px;
+            font-size: 20px;
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 28px 32px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 16px;
+            line-height: 1.7;
+            overflow-x: auto;
+            width: 100%;
+            max-width: 900px;
+            text-align: left;
+        }
+
+        .code-block.small {
+            font-size: 14px;
+            padding: 20px 24px;
+        }
+
+        .code-comment {
+            color: rgba(255,255,255,0.35);
+        }
+
+        .code-keyword {
+            color: #FF7AC6;
+        }
+
+        .code-string {
+            color: #30D158;
+        }
+
+        .code-function {
+            color: #0A84FF;
+        }
+
+        .code-param {
+            color: #FFD60A;
+        }
+
+        /* Before/After comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .comparison-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .comparison-card.before {
+            border-color: rgba(255,69,58,0.3);
+        }
+
+        .comparison-card.after {
+            border-color: rgba(48,209,88,0.3);
+        }
+
+        .comparison-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .comparison-card.before .comparison-label {
+            color: #FF453A;
+        }
+
+        .comparison-card.after .comparison-label {
+            color: #30D158;
+        }
+
+        /* Table styles */
+        .mode-table {
+            width: 100%;
+            max-width: 1000px;
+            border-collapse: collapse;
+            margin-top: 32px;
+        }
+
+        .mode-table th,
+        .mode-table td {
+            padding: 20px 24px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .mode-table th {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .mode-table td {
+            font-size: 18px;
+        }
+
+        .mode-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .mode-name {
+            font-family: 'SF Mono', monospace;
+            color: #0A84FF;
+            font-weight: 600;
+        }
+
+        .mode-desc {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Architecture diagram */
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .arch-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px 32px;
+            font-size: 16px;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .arch-box.highlight {
+            border-color: #0A84FF;
+            background: rgba(10,132,255,0.1);
+        }
+
+        .arch-arrow {
+            font-size: 24px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .arch-arrow-down {
+            font-size: 32px;
+            color: #0A84FF;
+        }
+
+        /* Design principles */
+        .principles {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 32px;
+        }
+
+        .principle-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+        }
+
+        .principle-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0A84FF;
+            margin-bottom: 12px;
+        }
+
+        .principle-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .principle-desc {
+            font-size: 15px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+
+        /* Use cases grid */
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            width: 100%;
+            max-width: 1100px;
+            margin-top: 32px;
+        }
+
+        .use-case-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+        }
+
+        .use-case-mode {
+            font-family: 'SF Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            color: #0A84FF;
+            margin-bottom: 16px;
+        }
+
+        .use-case-examples {
+            font-size: 15px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.6;
+        }
+
+        /* Result metrics */
+        .metrics-row {
+            display: flex;
+            gap: 60px;
+            margin-top: 48px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 72px;
+            font-weight: 700;
+            letter-spacing: -3px;
+            background: linear-gradient(135deg, #0A84FF, #5AC8FA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 16px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 8px;
+        }
+
+        /* Footer link */
+        .footer-link {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .footer-link a {
+            color: #0A84FF;
+            text-decoration: none;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #0A84FF;
+            transform: scale(1.2);
+        }
+
+        .nav-dot:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-variant-numeric: tabular-nums;
+            z-index: 100;
+        }
+
+        /* Click zones for navigation */
+        .nav-zone {
+            position: fixed;
+            top: 0;
+            width: 20%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .nav-zone.prev {
+            left: 0;
+        }
+
+        .nav-zone.next {
+            right: 0;
+        }
+
+        /* Accent colors */
+        .accent {
+            color: #0A84FF;
+        }
+
+        .accent-green {
+            color: #30D158;
+        }
+
+        .accent-red {
+            color: #FF453A;
+        }
+
+        /* Small text */
+        .small-note {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="deck">
+        <!-- Slide 1: Title -->
+        <div class="slide active" data-slide="1">
+            <div class="content-centered">
+                <div class="section-label">Task Tool Enhancement</div>
+                <h1 class="headline">Context Inheritance</h1>
+                <p class="subhead">Smarter agent delegation through automatic conversation context sharing</p>
+            </div>
+            <div class="footer-link">
+                <a href="index.html">More Amplifier Stories →</a>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide" data-slide="2">
+            <div class="content-centered">
+                <div class="section-label">The Problem</div>
+                <h2 class="slide-title">Child Agents Fly Blind</h2>
+                <div class="problem-visual">
+                    <div class="agent-box parent">
+                        <div class="agent-icon">🧠</div>
+                        <div class="agent-label">Parent Agent</div>
+                        <div class="agent-status">Full conversation context</div>
+                    </div>
+                    <div class="arrow-broken">→</div>
+                    <div class="agent-box child">
+                        <div class="agent-icon">❓</div>
+                        <div class="agent-label">Child Agent</div>
+                        <div class="agent-status">Blank slate</div>
+                    </div>
+                </div>
+                <p class="subhead" style="margin-top: 48px;">
+                    When task() spawns a child agent, it starts with <span class="accent-red">zero knowledge</span> of the parent conversation
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 3: Before -->
+        <div class="slide" data-slide="3">
+            <div class="content-centered content-left">
+                <div class="section-label">Before</div>
+                <h2 class="slide-title" style="text-align: left;">Verbose Re-explanation</h2>
+                <div class="code-block">
+<span class="code-function">task</span>(<br>
+&nbsp;&nbsp;<span class="code-param">agent</span>=<span class="code-string">"explorer"</span>,<br>
+&nbsp;&nbsp;<span class="code-param">instruction</span>=<span class="code-string">"""Find auth bug in user module.</span><br>
+<span class="code-string"></span><br>
+<span class="code-string">&nbsp;&nbsp;&nbsp;&nbsp;The user asked about authentication issues.</span><br>
+<span class="code-string">&nbsp;&nbsp;&nbsp;&nbsp;They mentioned seeing 401 errors after login.</span><br>
+<span class="code-string">&nbsp;&nbsp;&nbsp;&nbsp;We discussed the session token handling.</span><br>
+<span class="code-string">&nbsp;&nbsp;&nbsp;&nbsp;The user tried clearing cookies already.</span><br>
+<span class="code-string">&nbsp;&nbsp;&nbsp;&nbsp;They're using the React frontend...</span><br>
+<span class="code-string">&nbsp;&nbsp;"""</span><br>
+)
+                </div>
+                <p class="small-note">Parent must manually copy entire conversation context into the instruction</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: After -->
+        <div class="slide" data-slide="4">
+            <div class="content-centered">
+                <div class="section-label">After</div>
+                <h2 class="slide-title">One Config, Automatic Context</h2>
+                <div class="comparison">
+                    <div class="comparison-card">
+                        <div class="comparison-label" style="color: rgba(255,255,255,0.5);">Bundle Config</div>
+                        <div class="code-block small">
+<span class="code-comment"># agents/explorer.yaml</span><br>
+<span class="code-keyword">inherit_context</span>: recent<br>
+<span class="code-keyword">inherit_context_turns</span>: 3
+                        </div>
+                    </div>
+                    <div class="comparison-card after">
+                        <div class="comparison-label">Task Call</div>
+                        <div class="code-block small">
+<span class="code-function">task</span>(<br>
+&nbsp;&nbsp;<span class="code-param">agent</span>=<span class="code-string">"explorer"</span>,<br>
+&nbsp;&nbsp;<span class="code-param">instruction</span>=<span class="code-string">"Find auth bug"</span><br>
+)
+                        </div>
+                    </div>
+                </div>
+                <p class="subhead" style="margin-top: 32px;">
+                    Child <span class="accent-green">automatically receives</span> last 3 turns of conversation
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Three Modes -->
+        <div class="slide" data-slide="5">
+            <div class="content-centered">
+                <div class="section-label">Configuration</div>
+                <h2 class="slide-title">Three Inheritance Modes</h2>
+                <table class="mode-table">
+                    <thead>
+                        <tr>
+                            <th>Mode</th>
+                            <th>Behavior</th>
+                            <th>Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="mode-name">none</span></td>
+                            <td>Child starts fresh</td>
+                            <td class="mode-desc">Privacy-sensitive tasks, stateless ops</td>
+                        </tr>
+                        <tr>
+                            <td><span class="mode-name">recent</span></td>
+                            <td>Pass last N turns</td>
+                            <td class="mode-desc">Most common — recent context without overflow</td>
+                        </tr>
+                        <tr>
+                            <td><span class="mode-name">all</span></td>
+                            <td>Pass entire history</td>
+                            <td class="mode-desc">Full conversation context needed</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="small-note">Default is <code style="color: #0A84FF;">none</code> — opt-in only, no surprise context sharing</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: How It Works -->
+        <div class="slide" data-slide="6">
+            <div class="content-centered">
+                <div class="section-label">Architecture</div>
+                <h2 class="slide-title">How It Works</h2>
+                <div class="architecture">
+                    <div class="arch-layer">
+                        <div class="arch-box">Parent Agent</div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box highlight">Task Tool</div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box">Child Agent</div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-layer">
+                        <div class="arch-box" style="max-width: 500px; font-size: 14px; color: rgba(255,255,255,0.7);">
+                            Task tool reads <code style="color: #0A84FF;">inherit_context</code> from bundle config<br>
+                            Extracts last N turns from parent's ContextManager<br>
+                            Sanitizes to user/assistant roles only<br>
+                            Passes to child via <code style="color: #0A84FF;">set_messages()</code>
+                        </div>
+                    </div>
+                </div>
+                <p class="small-note" style="margin-top: 32px;">
+                    <span class="accent">No kernel changes</span> — uses existing ContextManager API
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Design Philosophy -->
+        <div class="slide" data-slide="7">
+            <div class="content-centered">
+                <div class="section-label">Philosophy</div>
+                <h2 class="slide-title">Policy at the Edges</h2>
+                <div class="principles">
+                    <div class="principle-card">
+                        <div class="principle-number">01</div>
+                        <div class="principle-title">Opt-in Only</div>
+                        <div class="principle-desc">Default to none — agents must explicitly request context inheritance</div>
+                    </div>
+                    <div class="principle-card">
+                        <div class="principle-number">02</div>
+                        <div class="principle-title">Turn-based, Not Message-based</div>
+                        <div class="principle-desc">More intuitive — "last 3 exchanges" vs "last 6 messages"</div>
+                    </div>
+                    <div class="principle-card">
+                        <div class="principle-number">03</div>
+                        <div class="principle-title">Sanitized Messages</div>
+                        <div class="principle-desc">Only user/assistant roles passed — no system prompts or tool calls leak</div>
+                    </div>
+                    <div class="principle-card">
+                        <div class="principle-number">04</div>
+                        <div class="principle-title">Resume Compatible</div>
+                        <div class="principle-desc">Ignores parent context when resuming — uses persisted state instead</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Use Cases -->
+        <div class="slide" data-slide="8">
+            <div class="content-centered">
+                <div class="section-label">Guidance</div>
+                <h2 class="slide-title">When to Use Each Mode</h2>
+                <div class="use-cases">
+                    <div class="use-case-card">
+                        <div class="use-case-mode">none</div>
+                        <div class="use-case-examples">
+                            Sensitive information<br>
+                            Security-critical tasks<br>
+                            Stateless operations<br>
+                            Clean-room analysis
+                        </div>
+                    </div>
+                    <div class="use-case-card" style="border-color: rgba(10,132,255,0.3);">
+                        <div class="use-case-mode">recent (N=3-5)</div>
+                        <div class="use-case-examples">
+                            Most delegations<br>
+                            Bug investigation<br>
+                            Feature implementation<br>
+                            Code review tasks
+                        </div>
+                    </div>
+                    <div class="use-case-card">
+                        <div class="use-case-mode">all</div>
+                        <div class="use-case-examples">
+                            Architecture discussions<br>
+                            Complex debugging<br>
+                            Multi-step refactoring<br>
+                            Full context required
+                        </div>
+                    </div>
+                </div>
+                <p class="small-note">Use <code style="color: #0A84FF;">recent</code> with N=1-2 for quick lookups and simple queries</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: The Result -->
+        <div class="slide" data-slide="9">
+            <div class="content-centered">
+                <div class="section-label">Impact</div>
+                <h2 class="slide-title">Smarter Delegation</h2>
+                <div class="metrics-row">
+                    <div class="metric">
+                        <div class="metric-value">70%</div>
+                        <div class="metric-label">Shorter instructions</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">Kernel changes</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">Config options</div>
+                    </div>
+                </div>
+                <p class="subhead" style="margin-top: 48px;">
+                    Children inherit context.<br>
+                    Parents write less.<br>
+                    <span class="accent">Everyone wins.</span>
+                </p>
+            </div>
+            <div class="footer-link">
+                <a href="index.html">More Amplifier Stories →</a>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-zone prev" onclick="prevSlide()"></div>
+        <div class="nav-zone next" onclick="nextSlide()"></div>
+        <div class="nav-dots"></div>
+        <div class="slide-counter">1 / 9</div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 9;
+
+        // Initialize nav dots
+        const navDots = document.querySelector('.nav-dots');
+        for (let i = 1; i <= totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = `nav-dot${i === 1 ? ' active' : ''}`;
+            dot.onclick = () => goToSlide(i);
+            navDots.appendChild(dot);
+        }
+
+        function updateSlide() {
+            // Update slides
+            document.querySelectorAll('.slide').forEach((slide, index) => {
+                slide.classList.toggle('active', index + 1 === currentSlide);
+            });
+
+            // Update dots
+            document.querySelectorAll('.nav-dot').forEach((dot, index) => {
+                dot.classList.toggle('active', index + 1 === currentSlide);
+            });
+
+            // Update counter
+            document.querySelector('.slide-counter').textContent = `${currentSlide} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function goToSlide(n) {
+            currentSlide = n;
+            updateSlide();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goToSlide(1);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                goToSlide(totalSlides);
+            }
+        });
+
+        // Touch support
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) nextSlide();
+                else prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>

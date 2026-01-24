@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Amplifier Modes - Amplifier Stories</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(60px, 10vw, 120px) clamp(20px, 5vw, 80px) clamp(80px, 12vw, 100px);
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide.center {
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+        }
+
+        /* Typography */
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #0A84FF;
+            margin-bottom: 16px;
+        }
+
+        .headline {
+            font-size: clamp(36px, 10vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: clamp(16px, 3vw, 24px);
+        }
+
+        .medium-headline {
+            font-size: clamp(28px, 6vw, 48px);
+            font-weight: 600;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        .subhead {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 400;
+            color: rgba(255,255,255,0.6);
+            max-width: 800px;
+        }
+
+        .small-text {
+            font-size: clamp(12px, 2vw, 14px);
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: clamp(12px, 2vw, 16px);
+            padding: clamp(20px, 4vw, 28px);
+        }
+
+        .card-title {
+            font-size: clamp(18px, 2.5vw, 20px);
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #0A84FF;
+        }
+
+        .card-text {
+            font-size: clamp(14px, 2vw, 16px);
+            line-height: 1.6;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .thirds {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+            margin-top: clamp(20px, 4vw, 32px);
+        }
+
+        .halves {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(20px, 4vw, 32px);
+            margin-top: clamp(20px, 4vw, 32px);
+        }
+
+        /* Diagram */
+        .diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(20px, 4vw, 40px);
+            margin-top: clamp(32px, 5vw, 48px);
+        }
+
+        .diagram-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: clamp(12px, 2vw, 16px);
+            padding: clamp(16px, 3vw, 24px) clamp(20px, 4vw, 32px);
+            text-align: center;
+            min-width: min(180px, 40vw);
+        }
+
+        .diagram-box.highlight {
+            background: rgba(10,132,255,0.1);
+            border-color: rgba(10,132,255,0.4);
+        }
+
+        .diagram-box-title {
+            font-size: clamp(12px, 1.8vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+
+        .diagram-box-content {
+            font-size: clamp(16px, 2.5vw, 20px);
+            font-weight: 600;
+        }
+
+        .diagram-arrow {
+            font-size: clamp(24px, 4vw, 32px);
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: clamp(16px, 3vw, 24px);
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: clamp(12px, 2vw, 15px);
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .code-comment {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .code-string {
+            color: #0A84FF;
+        }
+
+        .code-keyword {
+            color: #FF9F0A;
+        }
+
+        .code-number {
+            color: #30D158;
+        }
+
+        /* Prompt indicator */
+        .prompt-demo {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: clamp(24px, 4vw, 32px);
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: clamp(16px, 3vw, 24px);
+            text-align: center;
+            margin-top: clamp(24px, 4vw, 32px);
+        }
+
+        .prompt-mode {
+            color: #0A84FF;
+            font-weight: 600;
+        }
+
+        .prompt-cursor {
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Comparison */
+        .before-after {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(20px, 4vw, 32px);
+            margin-top: clamp(24px, 4vw, 32px);
+        }
+
+        .before {
+            border-color: rgba(255,69,58,0.3);
+        }
+
+        .before .card-title {
+            color: #FF453A;
+        }
+
+        .after {
+            border-color: rgba(48,209,88,0.3);
+        }
+
+        .after .card-title {
+            color: #30D158;
+        }
+
+        /* Mode cards */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+            margin-top: clamp(24px, 4vw, 32px);
+        }
+
+        .mode-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: clamp(12px, 2vw, 16px);
+            padding: clamp(20px, 4vw, 28px);
+        }
+
+        .mode-name {
+            font-family: 'SF Mono', monospace;
+            font-size: clamp(20px, 3vw, 24px);
+            font-weight: 600;
+            color: #0A84FF;
+            margin-bottom: 12px;
+        }
+
+        .mode-desc {
+            font-size: clamp(14px, 2vw, 16px);
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+
+        /* Command table */
+        .command-list {
+            margin-top: clamp(24px, 4vw, 32px);
+        }
+
+        .command-item {
+            display: flex;
+            align-items: center;
+            gap: clamp(16px, 3vw, 24px);
+            padding: clamp(16px, 2.5vw, 20px);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .command-name {
+            font-family: 'SF Mono', monospace;
+            font-size: clamp(14px, 2vw, 16px);
+            color: #0A84FF;
+            min-width: 140px;
+            flex-shrink: 0;
+        }
+
+        .command-desc {
+            font-size: clamp(14px, 2vw, 16px);
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Architecture layers */
+        .layer-stack {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 2vw, 16px);
+            margin-top: clamp(24px, 4vw, 32px);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .layer {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: clamp(16px, 3vw, 24px);
+            display: flex;
+            align-items: center;
+            gap: clamp(16px, 3vw, 24px);
+        }
+
+        .layer-number {
+            font-size: clamp(28px, 5vw, 36px);
+            font-weight: 700;
+            color: #0A84FF;
+            min-width: 50px;
+        }
+
+        .layer-content h3 {
+            font-size: clamp(16px, 2.2vw, 18px);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .layer-content p {
+            font-size: clamp(13px, 1.8vw, 14px);
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Policy table */
+        .policy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+            margin-top: clamp(24px, 4vw, 32px);
+        }
+
+        .policy-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: clamp(12px, 2vw, 16px);
+            padding: clamp(20px, 4vw, 28px);
+        }
+
+        .policy-card.safe {
+            border-color: rgba(48,209,88,0.3);
+        }
+
+        .policy-card.safe .policy-name {
+            color: #30D158;
+        }
+
+        .policy-card.warn {
+            border-color: rgba(255,159,10,0.3);
+        }
+
+        .policy-card.warn .policy-name {
+            color: #FF9F0A;
+        }
+
+        .policy-card.blocked {
+            border-color: rgba(255,69,58,0.3);
+        }
+
+        .policy-card.blocked .policy-name {
+            color: #FF453A;
+        }
+
+        .policy-name {
+            font-size: clamp(18px, 2.5vw, 20px);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .policy-tools {
+            font-family: 'SF Mono', monospace;
+            font-size: clamp(12px, 1.8vw, 14px);
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 12px;
+        }
+
+        .policy-behavior {
+            font-size: clamp(14px, 2vw, 15px);
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Highlight box */
+        .highlight-box {
+            background: rgba(10,132,255,0.1);
+            border: 1px solid rgba(10,132,255,0.3);
+            border-radius: clamp(10px, 1.5vw, 12px);
+            padding: clamp(16px, 3vw, 20px) clamp(20px, 4vw, 28px);
+            margin-top: clamp(24px, 4vw, 32px);
+            font-size: clamp(15px, 2.2vw, 18px);
+            line-height: 1.5;
+        }
+
+        /* File tree */
+        .file-tree {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: clamp(20px, 3vw, 28px);
+            font-family: 'SF Mono', monospace;
+            font-size: clamp(12px, 1.8vw, 14px);
+            line-height: 1.8;
+            margin-top: clamp(24px, 4vw, 32px);
+        }
+
+        .file-tree .folder {
+            color: #0A84FF;
+        }
+
+        .file-tree .file {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .file-tree .comment {
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* Summary points */
+        .summary-points {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(16px, 3vw, 24px);
+            margin-top: clamp(32px, 5vw, 48px);
+            max-width: 700px;
+        }
+
+        .summary-point {
+            display: flex;
+            align-items: flex-start;
+            gap: clamp(16px, 3vw, 20px);
+        }
+
+        .summary-icon {
+            font-size: clamp(24px, 4vw, 32px);
+            flex-shrink: 0;
+        }
+
+        .summary-text {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            min-width: 12px;
+            min-height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (hover: none) {
+            .nav-dot { min-width: 16px; min-height: 16px; }
+        }
+
+        @media (max-width: 600px) {
+            .diagram { flex-direction: column; gap: 16px; }
+            .diagram-arrow { transform: rotate(90deg); }
+            .before-after { grid-template-columns: 1fr; }
+            .layer { flex-direction: column; text-align: center; }
+            .command-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .command-name { min-width: auto; }
+        }
+
+        .nav-dot.active {
+            background: #0A84FF;
+            transform: scale(1.3);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* More stories link */
+        .more-stories {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(11px, 1.5vw, 12px);
+            color: rgba(255,255,255,0.3);
+            text-decoration: none;
+            z-index: 100;
+        }
+        .more-stories:hover {
+            color: rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Slide 1: Title -->
+    <div class="slide active center">
+        <div class="section-label">Developer Experience</div>
+        <h1 class="headline">Amplifier Modes</h1>
+        <p class="subhead">Behavioral control through context, not just tool blocking</p>
+        <div class="small-text" style="margin-top: 40px;">January 2026</div>
+    </div>
+
+    <!-- Slide 2: The Problem -->
+    <div class="slide">
+        <div class="section-label">The Problem</div>
+        <h2 class="medium-headline">Planning and implementing don't mix</h2>
+        
+        <p class="subhead">Sometimes you want to think through a problem before writing code. But the assistant doesn't know that.</p>
+        
+        <div class="thirds">
+            <div class="card">
+                <div class="card-title">Premature Implementation</div>
+                <div class="card-text">You ask about architecture and get 500 lines of code. You wanted a discussion, not a commit.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Manual Reminders</div>
+                <div class="card-text">"Don't write any files yet" repeated in every message. Tedious and easy to forget.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">No Feedback</div>
+                <div class="card-text">No visual indication of current operating mode. Is the assistant planning or implementing?</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: The Solution -->
+    <div class="slide center">
+        <div class="section-label">The Solution</div>
+        <h2 class="headline">Behavioral modifiers</h2>
+        <p class="subhead">Not just "block tools" — guide the assistant's mindset</p>
+        
+        <div class="diagram">
+            <div class="diagram-box">
+                <div class="diagram-box-title">Context</div>
+                <div class="diagram-box-content">System Reminder</div>
+            </div>
+            <div class="diagram-arrow">+</div>
+            <div class="diagram-box highlight">
+                <div class="diagram-box-title">Enforcement</div>
+                <div class="diagram-box-content">Tool Moderation</div>
+            </div>
+            <div class="diagram-arrow">+</div>
+            <div class="diagram-box">
+                <div class="diagram-box-title">Visibility</div>
+                <div class="diagram-box-content">Prompt Indicator</div>
+            </div>
+        </div>
+        
+        <div class="highlight-box" style="max-width: 700px; margin: 40px auto 0;">
+            Modes combine context injection, tool policies, and visual feedback for consistent behavior control.
+        </div>
+    </div>
+
+    <!-- Slide 4: Available Modes -->
+    <div class="slide">
+        <div class="section-label">Available Modes</div>
+        <h2 class="medium-headline">Three modes for different workflows</h2>
+        
+        <div class="mode-grid">
+            <div class="mode-card">
+                <div class="mode-name">/plan</div>
+                <div class="mode-desc">Think and discuss, don't implement. Perfect for architecture discussions, design reviews, and problem decomposition.</div>
+            </div>
+            <div class="mode-card">
+                <div class="mode-name">/review</div>
+                <div class="mode-desc">Analyze and critique code without modifying. Read files, run tests, but no changes. Pure code review mode.</div>
+            </div>
+            <div class="mode-card">
+                <div class="mode-name">/explore</div>
+                <div class="mode-desc">Understand before acting. Investigate the codebase, trace dependencies, gather context before making decisions.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Commands -->
+    <div class="slide">
+        <div class="section-label">Interface</div>
+        <h2 class="medium-headline">Simple commands</h2>
+        
+        <div class="command-list">
+            <div class="command-item">
+                <div class="command-name">/modes</div>
+                <div class="command-desc">List all available modes with descriptions</div>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/mode &lt;name&gt;</div>
+                <div class="command-desc">Enable a specific mode (e.g., /mode plan)</div>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/mode off</div>
+                <div class="command-desc">Disable the current mode and return to normal</div>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/plan</div>
+                <div class="command-desc">Quick shortcut to enable plan mode</div>
+            </div>
+        </div>
+        
+        <div class="highlight-box" style="max-width: 600px;">
+            Modes are toggle-based: one command on, one command off. No complex state to manage.
+        </div>
+    </div>
+
+    <!-- Slide 6: How It Works -->
+    <div class="slide">
+        <div class="section-label">Architecture</div>
+        <h2 class="medium-headline">Three-layer enforcement</h2>
+        
+        <div class="layer-stack">
+            <div class="layer">
+                <div class="layer-number">1</div>
+                <div class="layer-content">
+                    <h3>Context Injection</h3>
+                    <p>prompt:submit hook injects &lt;system-reminder&gt; each turn with mode-specific guidance</p>
+                </div>
+            </div>
+            <div class="layer">
+                <div class="layer-number">2</div>
+                <div class="layer-content">
+                    <h3>Tool Moderation</h3>
+                    <p>tool:pre hook applies allow/warn/block policy per tool based on active mode</p>
+                </div>
+            </div>
+            <div class="layer">
+                <div class="layer-number">3</div>
+                <div class="layer-content">
+                    <h3>State Management</h3>
+                    <p>Mode state propagates to child sessions, maintaining consistent behavior</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Tool Policies -->
+    <div class="slide">
+        <div class="section-label">Enforcement</div>
+        <h2 class="medium-headline">Tool policies in plan mode</h2>
+        
+        <div class="policy-grid">
+            <div class="policy-card safe">
+                <div class="policy-name">Safe</div>
+                <div class="policy-tools">read_file, glob, grep, web_search, task, todo</div>
+                <div class="policy-behavior">Always allowed. Reading and thinking tools work normally.</div>
+            </div>
+            <div class="policy-card warn">
+                <div class="policy-name">Warn First</div>
+                <div class="policy-tools">bash</div>
+                <div class="policy-behavior">Warned once, then allowed. Useful for exploration commands.</div>
+            </div>
+            <div class="policy-card blocked">
+                <div class="policy-name">Blocked</div>
+                <div class="policy-tools">write_file, edit_file</div>
+                <div class="policy-behavior">Denied with explanation. No file modifications in plan mode.</div>
+            </div>
+        </div>
+        
+        <div class="highlight-box" style="max-width: 600px;">
+            Warn-first pattern: bash is useful for exploration (git log, ls, etc). Warn once, allow after acknowledgment.
+        </div>
+    </div>
+
+    <!-- Slide 8: Prompt Indicator -->
+    <div class="slide center">
+        <div class="section-label">Visual Feedback</div>
+        <h2 class="medium-headline">Always know your mode</h2>
+        
+        <p class="subhead">The prompt changes to show the active mode</p>
+        
+        <div class="prompt-demo">
+            <span class="prompt-mode">[plan]</span><span class="prompt-cursor">&gt; </span><span style="color: rgba(255,255,255,0.6);">describe the authentication flow...</span>
+        </div>
+        
+        <div class="before-after" style="max-width: 800px;">
+            <div class="card before">
+                <div class="card-title">Without Modes</div>
+                <div class="card-text">
+                    <span style="font-family: monospace;">&gt;</span> "Remember, don't write files yet, just discuss the architecture..."<br><br>
+                    Repeated every message. Easy to forget.
+                </div>
+            </div>
+            <div class="card after">
+                <div class="card-title">With Modes</div>
+                <div class="card-text">
+                    <span style="font-family: monospace; color: #0A84FF;">[plan]&gt;</span> "How should we structure authentication?"<br><br>
+                    Mode is visible. Behavior is enforced.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Extensibility -->
+    <div class="slide">
+        <div class="section-label">Extensible</div>
+        <h2 class="medium-headline">Add custom modes via markdown</h2>
+        
+        <div class="file-tree">
+<span class="folder">amplifier-bundle-modes/</span>
+├── <span class="file">bundle.md</span>              <span class="comment"># Thin wrapper</span>
+├── <span class="file">behaviors/modes.yaml</span>   <span class="comment"># Hook configuration</span>
+├── <span class="folder">modes/</span>                 <span class="comment"># Mode definitions</span>
+│   ├── <span class="file">plan.md</span>            <span class="comment"># Planning mode</span>
+│   ├── <span class="file">review.md</span>          <span class="comment"># Code review mode</span>
+│   └── <span class="file">explore.md</span>         <span class="comment"># Exploration mode</span>
+└── <span class="folder">modules/hooks-mode/</span>    <span class="comment"># Generic mode engine</span>
+        </div>
+        
+        <div class="highlight-box" style="max-width: 700px;">
+            <strong>Create your own modes:</strong> Add a markdown file to the modes/ directory. Define context injection text and tool policies. The generic engine handles the rest.
+        </div>
+    </div>
+
+    <!-- Slide 10: Summary -->
+    <div class="slide center">
+        <div class="section-label">Summary</div>
+        <h2 class="headline">One command changes everything</h2>
+        
+        <div class="summary-points">
+            <div class="summary-point">
+                <div class="summary-icon">/</div>
+                <div class="summary-text"><strong>/plan</strong> — Think before implementing</div>
+            </div>
+            <div class="summary-point">
+                <div class="summary-icon">/</div>
+                <div class="summary-text"><strong>/review</strong> — Analyze without modifying</div>
+            </div>
+            <div class="summary-point">
+                <div class="summary-icon">/</div>
+                <div class="summary-text"><strong>/explore</strong> — Understand before acting</div>
+            </div>
+        </div>
+        
+        <div class="highlight-box" style="max-width: 700px; margin-top: 48px;">
+            Behavioral control through context injection + tool moderation + visual feedback.<br>
+            Not just blocking tools — guiding the assistant's mindset.
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav" id="nav"></div>
+    <div class="slide-counter" id="counter"></div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+            updateNav();
+        }
+
+        function updateNav() {
+            const nav = document.getElementById('nav');
+            const counter = document.getElementById('counter');
+            nav.innerHTML = '';
+            slides.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot' + (i === currentSlide ? ' active' : '');
+                dot.onclick = () => showSlide(i);
+                nav.appendChild(dot);
+            });
+            counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') showSlide(currentSlide + 1);
+            if (e.key === 'ArrowLeft') showSlide(currentSlide - 1);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.nav') || e.target.closest('.more-stories')) return;
+            if (e.clientX > window.innerWidth / 2) showSlide(currentSlide + 1);
+            else showSlide(currentSlide - 1);
+        });
+
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (e.target.closest('.nav') || e.target.closest('.more-stories')) return;
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) diff > 0 ? showSlide(currentSlide + 1) : showSlide(currentSlide - 1);
+        }, { passive: true });
+
+        updateNav();
+    </script>
+    <a href="index.html" class="more-stories">More Amplifier Stories</a>
+</body>
+</html>
