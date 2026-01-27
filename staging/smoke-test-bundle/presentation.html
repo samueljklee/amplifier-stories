@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Amplifier Smoke Test - Safety Check, Not Debugger</title>
+    <style>
+        :root {
+            --accent: #00D4FF;
+            --accent-dim: rgba(0, 212, 255, 0.15);
+            --green: #30D158;
+            --red: #FF453A;
+            --yellow: #FFD60A;
+            --gray: rgba(255, 255, 255, 0.5);
+            
+            /* Fluid typography */
+            --fs-hero: clamp(36px, 10vw, 72px);
+            --fs-h1: clamp(28px, 6vw, 48px);
+            --fs-h2: clamp(22px, 4vw, 32px);
+            --fs-body: clamp(14px, 2vw, 18px);
+            --fs-small: clamp(12px, 1.8vw, 14px);
+            --fs-code: clamp(11px, 1.8vw, 15px);
+            --fs-big-number: clamp(48px, 15vw, 120px);
+            
+            /* Fluid spacing */
+            --space-xs: clamp(8px, 1.5vw, 12px);
+            --space-sm: clamp(12px, 2vw, 16px);
+            --space-md: clamp(16px, 3vw, 24px);
+            --space-lg: clamp(24px, 4vw, 40px);
+            --space-xl: clamp(32px, 6vw, 60px);
+            
+            /* Border radius */
+            --radius-sm: clamp(8px, 1vw, 12px);
+            --radius-md: clamp(12px, 1.5vw, 16px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(60px, 10vw, 120px) clamp(20px, 5vw, 80px) clamp(80px, 12vw, 100px);
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide.center {
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-label {
+            font-size: var(--fs-small);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: var(--space-sm);
+        }
+
+        .headline {
+            font-size: var(--fs-hero);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: var(--space-md);
+        }
+
+        .subhead {
+            font-size: var(--fs-h2);
+            font-weight: 400;
+            color: var(--gray);
+            line-height: 1.4;
+            max-width: min(700px, 90vw);
+        }
+
+        .h1 {
+            font-size: var(--fs-h1);
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: var(--space-md);
+        }
+
+        .h2 {
+            font-size: var(--fs-h2);
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .body-text {
+            font-size: var(--fs-body);
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .big-number {
+            font-size: var(--fs-big-number);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #00FFD4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+        }
+
+        .card-title {
+            font-size: var(--fs-body);
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+            color: var(--accent);
+        }
+
+        .card-desc {
+            font-size: var(--fs-small);
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: var(--space-lg);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: var(--space-md);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: var(--space-md);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-md) var(--space-lg);
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: var(--fs-code);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: min(900px, 100%);
+        }
+
+        .code-block .comment { color: #6A737D; }
+        .code-block .keyword { color: #FF7B72; }
+        .code-block .string { color: #A5D6FF; }
+        .code-block .function { color: #D2A8FF; }
+        .code-block .marker { color: var(--green); font-weight: 600; }
+        .code-block .cmd { color: var(--accent); }
+
+        /* Lists */
+        .check-list {
+            list-style: none;
+            font-size: var(--fs-body);
+            line-height: 2;
+        }
+
+        .check-list li::before {
+            content: ">";
+            color: var(--accent);
+            font-weight: 700;
+            margin-right: 12px;
+        }
+
+        /* Status indicators */
+        .status-pass {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .status-fail {
+            color: var(--red);
+            font-weight: 600;
+        }
+
+        /* Comparison layout */
+        .comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+            gap: var(--space-lg);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .comparison-col {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+        }
+
+        .comparison-col h3 {
+            font-size: var(--fs-h2);
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time-badge {
+            font-size: var(--fs-small);
+            background: var(--accent-dim);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        /* Output display */
+        .output-block {
+            background: #0D1117;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-md) var(--space-lg);
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: var(--fs-code);
+            line-height: 1.6;
+            white-space: pre;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: min(700px, 100%);
+        }
+
+        .output-block .header { color: var(--accent); font-weight: 600; }
+        .output-block .pass { color: var(--green); }
+        .output-block .summary { color: var(--yellow); }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+            gap: var(--space-lg);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: clamp(36px, 10vw, 64px);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #00FFD4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .metric-label {
+            font-size: var(--fs-small);
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: var(--space-xs);
+        }
+
+        /* Highlight box */
+        .highlight-box {
+            background: var(--accent-dim);
+            border-left: 4px solid var(--accent);
+            padding: var(--space-md) var(--space-lg);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            max-width: min(700px, 100%);
+        }
+
+        .highlight-box p {
+            font-size: var(--fs-body);
+            line-height: 1.6;
+        }
+
+        /* Pill badges */
+        .pill {
+            display: inline-block;
+            font-size: var(--fs-small);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .pill-accent {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .pill-green {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--green);
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+            padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            transform: scale(1.3);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            font-size: var(--fs-small);
+            color: var(--gray);
+            z-index: 100;
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Touch targets for mobile */
+        @media (hover: none) {
+            .nav-dot {
+                min-width: 16px;
+                min-height: 16px;
+            }
+        }
+
+        /* Landscape mobile optimization */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .slide {
+                padding: 16px clamp(20px, 5vw, 80px) 60px;
+            }
+            .slide.center {
+                justify-content: flex-start;
+            }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .slide, .slide * {
+                animation: none !important;
+                transition: none !important;
+            }
+            .slide.active {
+                opacity: 1;
+            }
+        }
+
+        /* Spacing utility */
+        .mt-sm { margin-top: var(--space-sm); }
+        .mt-md { margin-top: var(--space-md); }
+        .mt-lg { margin-top: var(--space-lg); }
+        .mt-xl { margin-top: var(--space-xl); }
+        .mb-md { margin-bottom: var(--space-md); }
+        .mb-lg { margin-bottom: var(--space-lg); }
+    </style>
+</head>
+<body>
+    <!-- Slide 1: Title -->
+    <div class="slide center active">
+        <div class="section-label">Amplifier Bundle</div>
+        <h1 class="headline">Smoke Test</h1>
+        <p class="subhead">Safety check, not debugger.<br>Pass means carry on. Fail means investigate.</p>
+        <div class="mt-lg">
+            <span class="pill pill-accent">v1.0.0</span>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Problem -->
+    <div class="slide">
+        <div class="section-label">The Problem</div>
+        <h2 class="h1">"Does my Amplifier actually work?"</h2>
+        <div class="grid-3 mt-lg">
+            <div class="card">
+                <div class="card-title">Many Moving Parts</div>
+                <div class="card-desc">CLI, bundles, providers, sessions, tools, agents... any piece can fail silently.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Provider Complexity</div>
+                <div class="card-desc">OpenAI, Anthropic, Azure, Ollama... each with different configs and failure modes.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">No Quick Answer</div>
+                <div class="card-desc">"Just try it" isn't good enough when you're about to start important work.</div>
+            </div>
+        </div>
+        <div class="highlight-box mt-xl">
+            <p><strong>You need confidence</strong> that your installation is healthy before starting real work.</p>
+        </div>
+    </div>
+
+    <!-- Slide 3: The Solution -->
+    <div class="slide center">
+        <div class="section-label">The Solution</div>
+        <h2 class="headline">Use Amplifier<br>to Test Amplifier</h2>
+        <p class="subhead mt-md">Self-hosting creates virtuous cycles. Eat your own dog food.</p>
+        <div class="metrics-grid mt-xl">
+            <div class="metric">
+                <div class="metric-value">700</div>
+                <div class="metric-label">Lines of YAML</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">12</div>
+                <div class="metric-label">Test Phases</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">1</div>
+                <div class="metric-label">Bundle Install</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Two-Tier Testing -->
+    <div class="slide">
+        <div class="section-label">Architecture</div>
+        <h2 class="h1">Two-Tier Testing</h2>
+        <p class="body-text mb-lg">Separate fast validation from comprehensive verification.</p>
+        <div class="comparison">
+            <div class="comparison-col">
+                <h3>CLI Tests <span class="time-badge">~30 sec</span></h3>
+                <ul class="check-list">
+                    <li>No LLM required</li>
+                    <li>Tests CLI commands</li>
+                    <li>Validates configuration</li>
+                    <li>Checks resources exist</li>
+                    <li>CI-friendly with --skip-llm</li>
+                </ul>
+            </div>
+            <div class="comparison-col">
+                <h3>LLM Tests <span class="time-badge">~3-5 min</span></h3>
+                <ul class="check-list">
+                    <li>Requires provider API key</li>
+                    <li>Tests actual AI responses</li>
+                    <li>Multi-provider validation</li>
+                    <li>Tool execution via LLM</li>
+                    <li>Agent delegation chains</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: CLI Tests Detail -->
+    <div class="slide">
+        <div class="section-label">Tier 1</div>
+        <h2 class="h1">CLI Tests</h2>
+        <p class="body-text mb-lg">Fast, deterministic, no API keys needed.</p>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">CLI Core</div>
+                <div class="card-desc">--version returns valid semver<br>--help shows usage info</div>
+            </div>
+            <div class="card">
+                <div class="card-title">CLI Config</div>
+                <div class="card-desc">bundle list/info commands<br>provider/source management</div>
+            </div>
+            <div class="card">
+                <div class="card-title">CLI Resources</div>
+                <div class="card-desc">module/agents/session lists<br>tool availability checks</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Recipe Validation</div>
+                <div class="card-desc">YAML syntax verification<br>Step dependency validation</div>
+            </div>
+        </div>
+        <div class="code-block mt-lg"><span class="cmd">$</span> amplifier --version
+<span class="marker">0.1.47</span>
+
+<span class="cmd">$</span> amplifier bundle list
+<span class="marker">smoke-test    Amplifier Smoke Test Bundle</span></div>
+    </div>
+
+    <!-- Slide 6: LLM Tests Detail -->
+    <div class="slide">
+        <div class="section-label">Tier 2</div>
+        <h2 class="h1">LLM Tests</h2>
+        <p class="body-text mb-lg">Comprehensive validation with actual AI providers.</p>
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-title">Multi-Provider</div>
+                <div class="card-desc">Tests all configured providers: OpenAI, Anthropic, Azure, Ollama</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Session CRUD</div>
+                <div class="card-desc">Create, list, resume, delete - full lifecycle</div>
+            </div>
+            <div class="card">
+                <div class="card-title">@Mention Validation</div>
+                <div class="card-desc">File reading and context injection verification</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Provider Responds</div>
+                <div class="card-desc">Simple echo test - can the LLM reply?</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Tool Execution</div>
+                <div class="card-desc">Bash tool invocation through the LLM</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Agent Delegation</div>
+                <div class="card-desc">Task tool delegating to sub-agents</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Token Marker Technique -->
+    <div class="slide">
+        <div class="section-label">Key Innovation</div>
+        <h2 class="h1">Token Marker Technique</h2>
+        <p class="body-text mb-lg">Solving LLM non-determinism with deterministic markers.</p>
+        <div class="code-block"><span class="comment"># Provider responds: Just echo a marker</span>
+amplifier run <span class="string">'Reply with exactly: <span class="marker">SMOKE_TEST_OK</span>'</span>
+
+<span class="comment"># Tool execution: LLM must use bash tool</span>
+amplifier run <span class="string">'Use bash to run: echo <span class="marker">TOOL_OK</span>'</span>
+
+<span class="comment"># Agent delegation: LLM must delegate to sub-agent</span>
+amplifier run <span class="string">'Delegate to explorer: Reply with <span class="marker">AGENT_OK</span>'</span></div>
+        <div class="highlight-box mt-lg">
+            <p><strong>If marker appears = PASS</strong><br>
+            <strong>If marker missing = FAIL</strong><br><br>
+            Simple, reliable, no fuzzy matching needed.</p>
+        </div>
+    </div>
+
+    <!-- Slide 8: Smart Design -->
+    <div class="slide">
+        <div class="section-label">Design Decisions</div>
+        <h2 class="h1">Smart Defaults</h2>
+        <div class="grid-2 mt-lg">
+            <div class="card">
+                <div class="card-title">on_error: continue</div>
+                <div class="card-desc">Collects ALL failures instead of stopping at the first. You see the complete picture, not just the first problem.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">--skip-llm Mode</div>
+                <div class="card-desc">CI-friendly mode that skips provider tests. No API keys needed for basic validation.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Auto-Detection</div>
+                <div class="card-desc">Providers detected via environment variables. Unconfigured providers are skipped, not failed.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Declarative Recipe</div>
+                <div class="card-desc">700 lines of YAML beats imperative scripts. Easy to read, extend, and maintain.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Usage -->
+    <div class="slide">
+        <div class="section-label">Usage</div>
+        <h2 class="h1">How to Run</h2>
+        <p class="body-text mb-lg">Install once, run anytime.</p>
+        <div class="code-block"><span class="comment"># Install the bundle</span>
+<span class="cmd">$</span> amplifier bundle add git+https://github.com/samueljklee/amplifier-bundle-smoke-test --app
+
+<span class="comment"># Run via conversation (with LLM tests)</span>
+<span class="cmd">></span> <span class="string">"Run smoke tests"</span>
+
+<span class="comment"># Run via conversation (CLI only, no API calls)</span>
+<span class="cmd">></span> <span class="string">"Smoke test --skip-llm"</span>
+
+<span class="comment"># Run via direct CLI invocation</span>
+<span class="cmd">$</span> amplifier tool invoke recipes \
+    operation=execute \
+    recipe_path=@smoke-test:recipes/smoke-test.yaml</div>
+    </div>
+
+    <!-- Slide 10: Output Example -->
+    <div class="slide">
+        <div class="section-label">Results</div>
+        <h2 class="h1">What Success Looks Like</h2>
+        <div class="output-block mt-lg"><span class="header">============================================================
+AMPLIFIER SMOKE TEST RESULTS
+============================================================</span>
+
+CLI Core:                 <span class="pass">PASS</span>
+CLI Config:               <span class="pass">PASS</span>
+CLI Resources:            <span class="pass">PASS</span>
+Recipe Validation:        <span class="pass">PASS</span>
+Source Override:          <span class="pass">PASS</span>
+Multi-Provider:           <span class="pass">PASS</span>
+Session CRUD:             <span class="pass">PASS</span>
+@Mention Validation:      <span class="pass">PASS</span>
+Provider Responds:        <span class="pass">PASS</span>
+Tool Execution:           <span class="pass">PASS</span>
+Agent Delegation:         <span class="pass">PASS</span>
+
+<span class="summary">SUMMARY: 12 passed, 0 failed, 0 skipped (of 12)</span>
+
+<span class="header">SMOKE TEST: PASS</span>
+Safe to proceed: <span class="pass">YES</span></div>
+    </div>
+
+    <!-- Slide 11: When to Run -->
+    <div class="slide">
+        <div class="section-label">Best Practices</div>
+        <h2 class="h1">When to Run</h2>
+        <div class="grid-2 mt-lg">
+            <div>
+                <ul class="check-list">
+                    <li>After installing Amplifier</li>
+                    <li>After updating to a new version</li>
+                    <li>After changing provider config</li>
+                    <li>Before starting important work</li>
+                    <li>When something feels "off"</li>
+                </ul>
+            </div>
+            <div class="highlight-box">
+                <p><strong>Philosophy</strong><br><br>
+                This is a safety check, not a debugger.<br><br>
+                <span class="status-pass">PASS</span> = Carry on with confidence<br>
+                <span class="status-fail">FAIL</span> = Stop and investigate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Key Takeaways -->
+    <div class="slide">
+        <div class="section-label">Summary</div>
+        <h2 class="h1">Key Takeaways</h2>
+        <div class="grid-2 mt-lg">
+            <div class="card">
+                <div class="card-title">1. Self-Hosting Wins</div>
+                <div class="card-desc">Using Amplifier to test Amplifier creates a virtuous cycle of quality.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">2. Declarative > Imperative</div>
+                <div class="card-desc">YAML recipes are easier to read, extend, and maintain than shell scripts.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">3. Skip Modes Matter</div>
+                <div class="card-desc">--skip-llm serves CI pipelines. Full mode serves local development.</div>
+            </div>
+            <div class="card">
+                <div class="card-title">4. Token Markers Work</div>
+                <div class="card-desc">Deterministic markers solve LLM testing without fuzzy matching.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 13: CTA -->
+    <div class="slide center">
+        <div class="section-label">Get Started</div>
+        <h2 class="headline">Try It Now</h2>
+        <div class="code-block mt-lg" style="text-align: left;">amplifier bundle add git+https://github.com/samueljklee/amplifier-bundle-smoke-test --app</div>
+        <p class="subhead mt-lg">
+            <a href="https://github.com/samueljklee/amplifier-bundle-smoke-test" style="color: var(--accent); text-decoration: none;">github.com/samueljklee/amplifier-bundle-smoke-test</a>
+        </p>
+        <div class="mt-lg">
+            <span class="pill pill-green">Open Source</span>
+        </div>
+    </div>
+
+    <!-- Navigation dots -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="slide-counter" id="slideCounter">1 / 13</div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const navDots = document.getElementById('navDots');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        // Create nav dots
+        slides.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+            dot.addEventListener('click', () => goToSlide(i));
+            navDots.appendChild(dot);
+        });
+
+        function updateSlide() {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === currentSlide);
+            });
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlide);
+            });
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        function goToSlide(n) {
+            currentSlide = Math.max(0, Math.min(n, slides.length - 1));
+            updateSlide();
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevSlide();
+            }
+        });
+
+        // Click navigation
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.nav-dots') || e.target.closest('a')) return;
+            const rect = document.body.getBoundingClientRect();
+            const x = e.clientX / rect.width;
+            if (x > 0.5) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+        });
+
+        // Touch/swipe navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }, { passive: true });
+    </script>
+</body>
+</html>

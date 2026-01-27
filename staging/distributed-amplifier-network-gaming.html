@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Distributed AI Network While Gaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, -apple-system, sans-serif;
+            background: #000000;
+            color: #FFFFFF;
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            padding: 60px 80px;
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            background: #000000;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .slide.center {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        /* Section labels */
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #0A84FF;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+        
+        /* Title slide headlines */
+        h1 {
+            font-size: 72px;
+            font-weight: 700;
+            color: #FFFFFF;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin: 0 0 24px 0;
+        }
+        
+        /* Content slide headings */
+        h2 {
+            font-size: 48px;
+            font-weight: 600;
+            color: #FFFFFF;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin: 0 0 40px 0;
+        }
+        
+        /* Subtitles */
+        h3 {
+            font-size: 32px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.4;
+            margin: 0 0 20px 0;
+        }
+        
+        p {
+            font-size: 24px;
+            line-height: 1.5;
+            color: #FFFFFF;
+            margin: 0 0 24px 0;
+            max-width: 900px;
+        }
+        
+        .subtitle {
+            font-size: 32px;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .date {
+            font-size: 16px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 40px;
+        }
+        
+        /* Quote boxes */
+        .quote {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid #0A84FF;
+            border-radius: 12px;
+            padding: 32px 40px;
+            margin: 24px 0;
+            max-width: 800px;
+        }
+        
+        .quote p {
+            font-size: 28px;
+            font-style: italic;
+            margin-bottom: 0;
+            color: #FFFFFF;
+        }
+        
+        .quote-small {
+            font-size: 20px !important;
+            line-height: 1.6 !important;
+        }
+        
+        .quote-source {
+            font-size: 16px;
+            font-style: normal;
+            color: rgba(255,255,255,0.5);
+            margin-top: 16px;
+            display: block;
+        }
+        
+        /* Highlight box */
+        .highlight-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 32px 40px;
+            margin: 24px 0;
+        }
+        
+        /* WOW box - for the breakthrough moment */
+        .wow-box {
+            background: rgba(255,107,107,0.1);
+            border: 2px solid #FF6B6B;
+            border-radius: 16px;
+            padding: 40px;
+            margin: 32px 0;
+            text-align: center;
+        }
+        
+        .wow-box .section-label {
+            color: #FF6B6B;
+        }
+        
+        .wow-text {
+            font-size: 36px;
+            font-weight: 600;
+            color: #FF6B6B;
+            line-height: 1.3;
+        }
+        
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 32px;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0A84FF;
+            margin-bottom: 12px;
+        }
+        
+        .card-text {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+        
+        /* Grid layouts */
+        .split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+            flex: 1;
+        }
+        
+        .thirds {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+        
+        /* Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+        
+        .timeline-marker {
+            min-width: 120px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #0A84FF;
+        }
+        
+        .timeline-content {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px 28px;
+            flex: 1;
+            font-size: 20px;
+            line-height: 1.5;
+        }
+        
+        /* Code block */
+        .code-block {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 24px 32px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre;
+            color: #98D4A0;
+            overflow-x: auto;
+        }
+        
+        /* Big number */
+        .big-number {
+            font-size: 180px;
+            font-weight: 700;
+            letter-spacing: -8px;
+            background: linear-gradient(135deg, #0A84FF, #5E5CE6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-align: center;
+        }
+        
+        .number-label {
+            font-size: 24px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        /* Bullets */
+        ul {
+            font-size: 24px;
+            line-height: 1.6;
+            color: #FFFFFF;
+            margin: 0;
+            padding-left: 40px;
+            list-style: disc;
+        }
+        
+        li {
+            margin-bottom: 16px;
+        }
+        
+        li::marker {
+            color: #0A84FF;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-dot.active {
+            background: #0A84FF;
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            z-index: 100;
+        }
+        
+        /* Conversation flow */
+        .convo {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 700px;
+        }
+        
+        .convo-line {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        
+        .convo-speaker {
+            min-width: 80px;
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+        }
+        
+        .convo-speaker.human {
+            color: #0A84FF;
+        }
+        
+        .convo-speaker.ai {
+            color: #30D158;
+        }
+        
+        .convo-text {
+            font-size: 22px;
+            font-style: italic;
+            color: #FFFFFF;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide center active" data-slide="1">
+    <div class="section-label">A Weekend Project</div>
+    <h1>Building a Distributed AI Network</h1>
+    <h3 class="subtitle">While Gaming with My Kids</h3>
+    <p class="date">Brian Krabach • January 2026</p>
+</div>
+
+<!-- Slide 2: The Setup -->
+<div class="slide" data-slide="2">
+    <div class="section-label">Chapter 1</div>
+    <h2>A Fresh Raspberry Pi</h2>
+    
+    <p>I dropped Amplifier on a barely-set-up Raspberry Pi 5 with an unknown video conference speaker/microphone puck.</p>
+    
+    <p style="color: rgba(255,255,255,0.7);">As you can guess, I had it configure the rest of the Pi setup for me...</p>
+    
+    <div class="highlight-box" style="margin-top: 40px;">
+        <div class="card-title">The Hardware</div>
+        <div class="card-text">
+            • Raspberry Pi 5 — barely configured<br>
+            • Unknown USB conference puck — "some kind of speaker/mic thing"<br>
+            • Amplifier CLI — freshly installed
+        </div>
+    </div>
+</div>
+
+<!-- Slide 3: Hardware Probing -->
+<div class="slide" data-slide="3">
+    <div class="section-label">Chapter 1</div>
+    <h2>"Can You Hear Me Now?"</h2>
+    
+    <p>Including probing and figuring out the hardware through conversation:</p>
+    
+    <div class="convo" style="margin-top: 32px;">
+        <div class="convo-line">
+            <span class="convo-speaker human">Me</span>
+            <span class="convo-text">"Can you hear me now?"</span>
+        </div>
+        <div class="convo-line">
+            <span class="convo-speaker ai">AI</span>
+            <span class="convo-text">"Yeah, but it was on the main speaker."</span>
+        </div>
+        <div class="convo-line">
+            <span class="convo-speaker human">Me</span>
+            <span class="convo-text">"How about now?"</span>
+        </div>
+        <div class="convo-line">
+            <span class="convo-speaker ai">AI</span>
+            <span class="convo-text">"Yep, that's the right one."</span>
+        </div>
+    </div>
+    
+    <p style="margin-top: 32px; color: rgba(255,255,255,0.7);">Then it did the rest.</p>
+</div>
+
+<!-- Slide 4: Voice Interface -->
+<div class="slide" data-slide="4">
+    <div class="section-label">Chapter 1</div>
+    <h2>An Alexa-Like Flow</h2>
+    
+    <div class="split">
+        <div>
+            <p>The result: a complete voice interface built through conversation.</p>
+            
+            <ul style="margin-top: 32px;">
+                <li>Wake word detection</li>
+                <li>Talk naturally</li>
+                <li>It processes and does work</li>
+                <li>Responds via speaker</li>
+                <li>Continue the conversation...</li>
+                <li>Or it times out for later</li>
+            </ul>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">The Flow</div>
+            <div class="code-block" style="font-size: 14px;">
+"Hey Amplifier"
+    ↓
+[listening...]
+    ↓
+"Do the thing"
+    ↓
+[processing...]
+    ↓
+"Done. Here's what I did."
+    ↓
+[waiting for follow-up
+ or timeout]</div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 5: The Gaming Session -->
+<div class="slide center" data-slide="5">
+    <div class="section-label">Chapter 2</div>
+    <h1>Playing GTFO with My Kids</h1>
+    <h3 class="subtitle">The Pi was sitting next to me, idle.</h3>
+</div>
+
+<!-- Slide 6: The First Command -->
+<div class="slide" data-slide="6">
+    <div class="section-label">Chapter 2</div>
+    <h2>While Hacking a Door...</h2>
+    
+    <p>During a ~15 second pause in action, I gave it a task:</p>
+    
+    <div class="quote" style="margin-top: 40px;">
+        <p>"Go build the Amplifier service that I can run on each of my boxes so that they can talk to each other."</p>
+        <span class="quote-source">— Me, during a door hack in GTFO</span>
+    </div>
+    
+    <p style="margin-top: 40px; color: rgba(255,255,255,0.7);">And got back to the game.</p>
+</div>
+
+<!-- Slide 7: Building in Pauses -->
+<div class="slide" data-slide="7">
+    <div class="section-label">Chapter 2</div>
+    <h2>Through Additional Pauses...</h2>
+    
+    <div class="timeline">
+        <div class="timeline-item">
+            <span class="timeline-marker">Pause 1</span>
+            <div class="timeline-content">"Go build the service"</div>
+        </div>
+        <div class="timeline-item">
+            <span class="timeline-marker">Pause 2</span>
+            <div class="timeline-content">"Kick the tires" — test it out</div>
+        </div>
+        <div class="timeline-item">
+            <span class="timeline-marker">Pause 3</span>
+            <div class="timeline-content">It asked about deploying to other devices.<br>I had to authorize it on my Tailscale network — did that real quick.</div>
+        </div>
+        <div class="timeline-item">
+            <span class="timeline-marker">Pause 4</span>
+            <div class="timeline-content">It deployed to my first box — a <strong>DGX Spark</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8: DGX Recognition -->
+<div class="slide" data-slide="8">
+    <div class="section-label">Chapter 3</div>
+    <h2>It Profiled the Device</h2>
+    
+    <p>When deployed to the DGX Spark, the agent recognized what it was working with:</p>
+    
+    <div class="quote" style="margin-top: 32px;">
+        <p class="quote-small">"This has a killer GPU and excessive memory."</p>
+    </div>
+    
+    <div class="quote">
+        <p class="quote-small">"We should offload the voice processing to this device to use local models."</p>
+        <span class="quote-source">— Bonus observation from the agent</span>
+    </div>
+    
+    <p style="margin-top: 32px; color: rgba(255,255,255,0.7);">The AI wasn't just following instructions. It was thinking about architecture.</p>
+</div>
+
+<!-- Slide 9: The Vision -->
+<div class="slide" data-slide="9">
+    <div class="section-label">Chapter 3</div>
+    <h2>Explaining the Vision</h2>
+    
+    <p>It asked about deploying to another box. I clarified:</p>
+    
+    <div class="quote" style="margin-top: 40px;">
+        <p class="quote-small">"Yeah, the general idea is that I want you to be able to run a lightweight version on this one with the voice features, but then distribute work to the others to do — you are more just a coordinator box then."</p>
+    </div>
+    
+    <p style="margin-top: 40px; color: rgba(255,255,255,0.7);">So then it was off...</p>
+</div>
+
+<!-- Slide 10: THE BREAKTHROUGH -->
+<div class="slide center" data-slide="10">
+    <div class="section-label" style="color: #FF6B6B;">The Breakthrough</div>
+    <h2 style="margin-bottom: 40px;">It didn't deploy to the next box though...</h2>
+    
+    <div class="wow-box" style="max-width: 800px;">
+        <p class="wow-text">It told the first box it set up<br>to go deploy to the second box!</p>
+    </div>
+    
+    <p style="margin-top: 40px; color: rgba(255,255,255,0.7); font-size: 20px;">Autonomous agent-to-agent delegation.</p>
+</div>
+
+<!-- Slide 11: The Architecture -->
+<div class="slide" data-slide="11">
+    <div class="section-label">The Result</div>
+    <h2>Distributed Agent Network</h2>
+    
+    <div class="code-block" style="font-size: 14px; margin-top: 20px;">
+voicebox (Raspberry Pi 5)           spark-1 (DGX Spark)        spark-2 (DGX Spark)
+┌─────────────────────────┐     ┌─────────────────────────┐  ┌─────────────────────────┐
+│     COORDINATOR         │     │       WORKER            │  │       WORKER            │
+│                         │     │                         │  │                         │
+│  🎤 Voice Interface     │────▶│  🔧 Port 8420           │  │  🔧 Port 8420           │
+│  🧠 Lightweight Agent   │     │  💻 Full dev tools      │  │  💻 Full dev tools      │
+│  📡 Delegation Hub      │────▶│  🚀 GPU acceleration    │  │  🚀 GPU acceleration    │
+│                         │     │                         │  │                         │
+└─────────────────────────┘     └─────────────────────────┘  └─────────────────────────┘
+              │                            │                            │
+              └────────────────────────────┴────────────────────────────┘
+                                    Tailscale VPN Mesh</div>
+</div>
+
+<!-- Slide 12: Distributed Development -->
+<div class="slide" data-slide="12">
+    <div class="section-label">Chapter 4</div>
+    <h2>Splitting Dev Work</h2>
+    
+    <p>Then I came back later and had it split some dev work between them:</p>
+    
+    <div class="thirds" style="margin-top: 40px;">
+        <div class="card">
+            <div class="card-title">voicebox</div>
+            <div class="card-text">
+                Coordinator<br><br>
+                Plans the work<br>
+                Delegates tasks<br>
+                Reports results
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">spark-1</div>
+            <div class="card-text">
+                Worker<br><br>
+                <strong style="color: #0A84FF;">Building the backend</strong><br>
+                Full development tools<br>
+                GPU acceleration
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">spark-2</div>
+            <div class="card-text">
+                Worker<br><br>
+                <strong style="color: #0A84FF;">Building the frontend</strong><br>
+                Full development tools<br>
+                GPU acceleration
+            </div>
+        </div>
+    </div>
+    
+    <p style="margin-top: 40px; text-align: center; color: rgba(255,255,255,0.7);">Craziness!</p>
+</div>
+
+<!-- Slide 13: What This Means -->
+<div class="slide" data-slide="13">
+    <div class="section-label">Implications</div>
+    <h2>What This Demonstrates</h2>
+    
+    <ul style="margin-top: 20px;">
+        <li><strong>Natural language infrastructure</strong> — "Build me a service" becomes real infrastructure</li>
+        <li><strong>Conversational hardware setup</strong> — "Can you hear me now?" device configuration</li>
+        <li><strong>Hardware-aware optimization</strong> — AI recognizing capabilities, suggesting architecture</li>
+        <li><strong>Emergent agent behavior</strong> — Agents delegating to other agents, unprompted</li>
+        <li><strong>Voice-first development</strong> — Building while doing other things</li>
+    </ul>
+</div>
+
+<!-- Slide 14: The Insight -->
+<div class="slide center" data-slide="14">
+    <div class="section-label">The Insight</div>
+    <h2 style="max-width: 900px;">I didn't tell the agent to delegate to another agent.</h2>
+    <h2 style="max-width: 900px; margin-top: 40px;">I described a goal.</h2>
+    <h3 class="subtitle" style="margin-top: 60px;">It figured out the multi-agent coordination pattern on its own.</h3>
+</div>
+
+<!-- Slide 15: Closing -->
+<div class="slide center" data-slide="15">
+    <div style="font-size: 80px; margin-bottom: 40px;">🎮 → 🤖 → 🌐</div>
+    <h1>From Gaming Pauses<br>to Agent Networks</h1>
+    <h3 class="subtitle" style="margin-top: 40px;">The casual future of AI infrastructure</h3>
+    <p class="date">Built with Amplifier • January 2026</p>
+</div>
+
+<!-- Navigation -->
+<div class="nav" id="nav"></div>
+<div class="slide-counter" id="counter">1 / 15</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const nav = document.getElementById('nav');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    
+    // Create nav dots
+    slides.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goTo(i);
+        nav.appendChild(dot);
+    });
+    
+    function goTo(n) {
+        slides[current].classList.remove('active');
+        nav.children[current].classList.remove('active');
+        current = (n + slides.length) % slides.length;
+        slides[current].classList.add('active');
+        nav.children[current].classList.add('active');
+        counter.textContent = `${current + 1} / ${slides.length}`;
+    }
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') goTo(current + 1);
+        if (e.key === 'ArrowLeft') goTo(current - 1);
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.nav')) return;
+        const x = e.clientX / window.innerWidth;
+        if (x > 0.5) goTo(current + 1);
+        else goTo(current - 1);
+    });
+</script>
+
+</body>
+</html>
