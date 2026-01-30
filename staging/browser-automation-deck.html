@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Automation with Amplifier</title>
+    <style>
+        :root {
+            --accent: #00D4AA;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --accent-glow: rgba(0, 212, 170, 0.3);
+            --bg: #000;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text: #fff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+            --text-muted: rgba(255, 255, 255, 0.4);
+            --red: #FF6B6B;
+            --green: #4ADE80;
+            --blue: #60A5FA;
+            --purple: #A78BFA;
+            --orange: #FB923C;
+            
+            --font-headline: clamp(36px, 7vw, 72px);
+            --font-medium: clamp(24px, 4vw, 42px);
+            --font-subhead: clamp(18px, 2.5vw, 28px);
+            --font-body: clamp(14px, 1.8vw, 18px);
+            --font-small: clamp(12px, 1.5vw, 14px);
+            --padding-slide: clamp(24px, 5vw, 80px);
+            --gap: clamp(16px, 3vw, 32px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        .deck {
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: var(--padding-slide);
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .section-label {
+            font-size: var(--font-small);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .headline {
+            font-size: var(--font-headline);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.05;
+            margin-bottom: 24px;
+        }
+
+        .subtitle {
+            font-size: var(--font-subhead);
+            color: var(--text-dim);
+            font-weight: 400;
+            margin-bottom: 32px;
+        }
+
+        .medium-headline {
+            font-size: var(--font-medium);
+            font-weight: 600;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .body-text {
+            font-size: var(--font-body);
+            line-height: 1.7;
+            color: var(--text-dim);
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: var(--gap);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+            gap: var(--gap);
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: var(--gap);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 3vw, 32px);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: clamp(16px, 2vw, 20px);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: var(--font-small);
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* Problem cards - red accent */
+        .card.problem {
+            border-color: rgba(255, 107, 107, 0.3);
+            background: rgba(255, 107, 107, 0.05);
+        }
+
+        .card.problem .card-icon {
+            color: var(--red);
+        }
+
+        /* Solution cards */
+        .card.solution {
+            border-color: var(--accent-glow);
+            background: var(--accent-dim);
+        }
+
+        .card.solution .card-icon {
+            color: var(--accent);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: clamp(16px, 3vw, 24px);
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+            font-size: clamp(13px, 1.6vw, 15px);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+        }
+
+        .code-block .comment {
+            color: var(--text-muted);
+        }
+
+        .code-block .keyword {
+            color: var(--purple);
+        }
+
+        .code-block .string {
+            color: var(--accent);
+        }
+
+        .code-block .function {
+            color: var(--blue);
+        }
+
+        /* Stats */
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: clamp(48px, 10vw, 96px);
+            font-weight: 700;
+            letter-spacing: -3px;
+            background: linear-gradient(135deg, var(--accent), #00FFD4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: var(--font-small);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 8px;
+        }
+
+        /* Highlight text */
+        .highlight {
+            color: var(--accent);
+        }
+
+        .highlight-box {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-glow);
+            border-radius: 8px;
+            padding: 16px 24px;
+            display: inline-block;
+            margin-top: 24px;
+        }
+
+        /* Case study layout */
+        .case-study {
+            max-width: 1000px;
+        }
+
+        .case-context {
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid var(--accent);
+            padding: 16px 24px;
+            margin-bottom: 32px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .case-context-label {
+            font-size: var(--font-small);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding-left: 28px;
+            margin-bottom: 12px;
+            font-size: var(--font-body);
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, var(--accent-dim), rgba(0, 212, 170, 0.05));
+            border: 1px solid var(--accent-glow);
+            border-radius: 12px;
+            padding: 20px 28px;
+            margin-top: 32px;
+        }
+
+        .insight-label {
+            font-size: var(--font-small);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .insight-text {
+            font-size: var(--font-subhead);
+            font-weight: 500;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        /* Philosophy slide */
+        .philosophy-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .philosophy-item:last-child {
+            border-bottom: none;
+        }
+
+        .philosophy-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .philosophy-content h3 {
+            font-size: clamp(18px, 2.5vw, 22px);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .philosophy-content p {
+            font-size: var(--font-body);
+            color: var(--text-dim);
+        }
+
+        /* CTA slide */
+        .cta-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(24px, 4vw, 40px);
+            margin-bottom: 24px;
+        }
+
+        .cta-label {
+            font-size: var(--font-small);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .cta-value {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--accent);
+        }
+
+        .cta-tagline {
+            font-size: var(--font-medium);
+            font-weight: 600;
+            margin-top: 48px;
+            text-align: center;
+        }
+
+        .cta-tagline .highlight {
+            background: linear-gradient(135deg, var(--accent), #00FFD4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Title slide special */
+        .title-slide {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-slide .headline {
+            font-size: clamp(42px, 9vw, 84px);
+            margin-bottom: 16px;
+        }
+
+        .title-slide .subtitle {
+            font-size: var(--font-subhead);
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .title-icon {
+            font-size: clamp(64px, 12vw, 120px);
+            margin-bottom: 32px;
+            filter: drop-shadow(0 0 40px var(--accent-glow));
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .nav-dot:hover {
+            background: var(--text-dim);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: 'SF Mono', monospace;
+            z-index: 100;
+        }
+
+        /* Click zones */
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 20%;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .click-zone.left {
+            left: 0;
+        }
+
+        .click-zone.right {
+            right: 0;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide.active .animate {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        .slide.active .animate.delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .slide.active .animate.delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .slide.active .animate.delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .slide.active .animate.delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+        /* Print styles */
+        @media print {
+            .slide {
+                display: flex !important;
+                page-break-after: always;
+                min-height: 100vh;
+            }
+            .nav-dots, .slide-counter, .click-zone {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="deck">
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide active">
+            <div class="title-icon animate">🌐</div>
+            <h1 class="headline animate delay-1">Browser Automation<br>with <span class="highlight">Amplifier</span></h1>
+            <p class="subtitle animate delay-2">"When fetch isn't enough"</p>
+        </div>
+
+        <!-- Slide 2: The Gap -->
+        <div class="slide">
+            <div class="section-label animate">The Problem</div>
+            <h2 class="headline animate delay-1">The Gap</h2>
+            <p class="subtitle animate delay-2">What traditional tools <em>can't</em> do:</p>
+            
+            <div class="grid-4 animate delay-3">
+                <div class="card problem">
+                    <div class="card-icon">🚫</div>
+                    <div class="card-title">No JS Execution</div>
+                    <div class="card-desc">SPAs render empty divs. React, Vue, Angular - all invisible.</div>
+                </div>
+                <div class="card problem">
+                    <div class="card-icon">🔒</div>
+                    <div class="card-title">No Authentication</div>
+                    <div class="card-desc">Can't fill login forms. Gated content stays gated.</div>
+                </div>
+                <div class="card problem">
+                    <div class="card-icon">👁️</div>
+                    <div class="card-title">No Visual Verification</div>
+                    <div class="card-desc">Can't "see" the page. Layout bugs go unnoticed.</div>
+                </div>
+                <div class="card problem">
+                    <div class="card-icon">🖱️</div>
+                    <div class="card-title">No Interaction</div>
+                    <div class="card-desc">Can't click, type, or navigate. Static reads only.</div>
+                </div>
+            </div>
+
+            <div class="highlight-box animate delay-4">
+                <span style="font-size: var(--font-body);">Modern web apps need a <strong class="highlight">real browser</strong>.</span>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Solution -->
+        <div class="slide">
+            <div class="section-label animate">The Solution</div>
+            <h2 class="headline animate delay-1">Browser Bundle</h2>
+            <p class="subtitle animate delay-2">What <code style="color: var(--accent);">amplifier-bundle-browser</code> provides:</p>
+
+            <div class="grid-2" style="margin-bottom: 40px;">
+                <div class="animate delay-2">
+                    <div class="grid-3" style="margin-bottom: 24px;">
+                        <div class="card solution">
+                            <div class="card-icon">🤖</div>
+                            <div class="card-title">browser-operator</div>
+                            <div class="card-desc">Navigate, click, fill forms</div>
+                        </div>
+                        <div class="card solution">
+                            <div class="card-icon">📸</div>
+                            <div class="card-title">visual-documenter</div>
+                            <div class="card-desc">Screenshot & document</div>
+                        </div>
+                        <div class="card solution">
+                            <div class="card-icon">🔍</div>
+                            <div class="card-title">web-researcher</div>
+                            <div class="card-desc">Extract & analyze data</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="animate delay-3">
+                    <div class="card" style="height: 100%;">
+                        <div class="card-title" style="color: var(--accent); margin-bottom: 16px;">Key Capabilities</div>
+                        <ul class="bullet-list">
+                            <li><strong>Natural language control</strong> - just describe what you want</li>
+                            <li><strong>91% more efficient</strong> - 700 tokens vs 8,000 (CLI-based)</li>
+                            <li><strong>Ref-based selection</strong> - stable targeting (@e1, @e2)</li>
+                            <li><strong>8 ready recipes</strong> - quick demos to SPA testing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Case Study 1 -->
+        <div class="slide">
+            <div class="section-label animate">Case Study</div>
+            <h2 class="medium-headline animate delay-1">Amplifier SDK Development</h2>
+            <p class="subtitle animate delay-2" style="font-size: var(--font-body);">The Meta Story: Amplifier Building Itself</p>
+
+            <div class="case-study">
+                <div class="case-context animate delay-2">
+                    <div class="case-context-label">Context</div>
+                    <div class="body-text">Example web app with TypeScript frontend + Python server. Goal: Self-validate the SDK during development.</div>
+                </div>
+
+                <div class="card animate delay-3" style="margin-bottom: 24px;">
+                    <div class="card-title" style="color: var(--accent); margin-bottom: 16px;">What browser automation enabled:</div>
+                    <ul class="bullet-list">
+                        <li>Launch the example app in a real browser</li>
+                        <li>Interact with SDK features as a real user would</li>
+                        <li>Validate that TypeScript bindings work correctly</li>
+                        <li>Test the Python server integration end-to-end</li>
+                        <li>Report issues found during automated exploration</li>
+                    </ul>
+                </div>
+
+                <div class="insight-box animate delay-4">
+                    <div class="insight-label">Key Insight</div>
+                    <div class="insight-text">"Amplifier used browser automation to develop and validate its own SDK"</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Case Study 2 -->
+        <div class="slide">
+            <div class="section-label animate">Case Study</div>
+            <h2 class="medium-headline animate delay-1">Workspaces UI Validation</h2>
+            <p class="subtitle animate delay-2" style="font-size: var(--font-body);">User Journey Testing at Scale</p>
+
+            <div class="case-study">
+                <div class="case-context animate delay-2">
+                    <div class="case-context-label">Context</div>
+                    <div class="body-text">Workspaces web UI with complex project creation flows. Goal: Validate journeys, find gaps before users do.</div>
+                </div>
+
+                <div class="card animate delay-3" style="margin-bottom: 24px;">
+                    <div class="card-title" style="color: var(--accent); margin-bottom: 16px;">What browser automation enabled:</div>
+                    <ul class="bullet-list">
+                        <li>Walk through complete user journeys end-to-end</li>
+                        <li>Create projects through the UI (not API shortcuts)</li>
+                        <li>Test what real users would actually experience</li>
+                        <li><strong>Report missing features</strong> found during exploration</li>
+                        <li>Document gaps with screenshots as evidence</li>
+                    </ul>
+                </div>
+
+                <div class="insight-box animate delay-4">
+                    <div class="insight-label">Key Insight</div>
+                    <div class="insight-text">"Found missing features by being a user, not reading code"</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Case Study 3 (Bonus) -->
+        <div class="slide">
+            <div class="section-label animate">Bonus</div>
+            <h2 class="medium-headline animate delay-1">Data Extraction</h2>
+            <p class="subtitle animate delay-2" style="font-size: var(--font-body);">Reach dynamic content that fetch can't touch</p>
+
+            <div class="grid-2 animate delay-3">
+                <div class="card">
+                    <div class="card-icon">🕸️</div>
+                    <div class="card-title">Dynamic SPAs</div>
+                    <div class="card-desc" style="margin-bottom: 16px;">Content loaded via JavaScript, infinite scroll, lazy loading - all accessible.</div>
+                    <div class="code-block" style="font-size: 13px;">
+<span class="comment"># What you get with fetch:</span>
+&lt;div id="app"&gt;&lt;/div&gt;
+
+<span class="comment"># What you get with browser:</span>
+&lt;div id="app"&gt;
+  &lt;table&gt;...actual data...&lt;/table&gt;
+&lt;/div&gt;</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-title">Real-World Uses</div>
+                    <ul class="bullet-list" style="margin-top: 16px;">
+                        <li>Extract data from internal dashboards</li>
+                        <li>Scrape paginated results with "Load More"</li>
+                        <li>Capture data behind authentication walls</li>
+                        <li>Export from apps without API access</li>
+                    </ul>
+                </div>
+            </div>
+
+            <p class="body-text animate delay-4" style="text-align: center; margin-top: 32px; color: var(--text-muted);">
+                Shows versatility beyond testing - agents can gather data from anywhere
+            </p>
+        </div>
+
+        <!-- Slide 7: Philosophy -->
+        <div class="slide">
+            <div class="section-label animate">Philosophy</div>
+            <h2 class="headline animate delay-1">Be a User,<br>Not a Script</h2>
+
+            <div style="max-width: 800px; margin-top: 32px;">
+                <div class="philosophy-item animate delay-2">
+                    <div class="philosophy-icon">🔍</div>
+                    <div class="philosophy-content">
+                        <h3>Explore Naturally</h3>
+                        <p>Scroll, click, be curious. Don't follow rigid scripts - discover like a user would.</p>
+                    </div>
+                </div>
+                <div class="philosophy-item animate delay-2">
+                    <div class="philosophy-icon">📸</div>
+                    <div class="philosophy-content">
+                        <h3>Strategic Screenshots</h3>
+                        <p>Only capture when meaningful. Document issues, not every page load.</p>
+                    </div>
+                </div>
+                <div class="philosophy-item animate delay-3">
+                    <div class="philosophy-icon">🤝</div>
+                    <div class="philosophy-content">
+                        <h3>Ask When Stuck</h3>
+                        <p>Human-in-the-loop for ambiguous situations. Collaboration over automation.</p>
+                    </div>
+                </div>
+                <div class="philosophy-item animate delay-4">
+                    <div class="philosophy-icon">🧠</div>
+                    <div class="philosophy-content">
+                        <h3>Think Like the End User</h3>
+                        <p>What would confuse them? What would delight them? Test for experience.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Get Started -->
+        <div class="slide">
+            <div class="section-label animate">Get Started</div>
+            <h2 class="headline animate delay-1">Try It Now</h2>
+
+            <div class="grid-3 animate delay-2" style="margin-top: 40px; margin-bottom: 40px;">
+                <div class="cta-box">
+                    <div class="cta-label">Bundle</div>
+                    <div class="cta-value">samueljklee/amplifier-bundle-browser</div>
+                </div>
+                <div class="cta-box">
+                    <div class="cta-label">Quick Demo</div>
+                    <div class="cta-value">examples/quick-demo.yaml</div>
+                </div>
+                <div class="cta-box">
+                    <div class="cta-label">SPA Testing</div>
+                    <div class="cta-value">recipes/spa-ui-test.yaml</div>
+                </div>
+            </div>
+
+            <div class="grid-3 animate delay-3" style="margin-bottom: 48px;">
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Specialized Agents</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Ready Recipes</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">91%</div>
+                    <div class="stat-label">Token Savings</div>
+                </div>
+            </div>
+
+            <p class="cta-tagline animate delay-4">
+                Give your agents <span class="highlight">eyes</span> and <span class="highlight">hands</span>.
+            </p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-dots"></div>
+    <div class="slide-counter"></div>
+    <div class="click-zone left" onclick="navigate(-1)"></div>
+    <div class="click-zone right" onclick="navigate(1)"></div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const navDots = document.querySelector('.nav-dots');
+        const counter = document.querySelector('.slide-counter');
+        let currentSlide = 0;
+
+        // Create nav dots
+        slides.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+            dot.onclick = () => goToSlide(i);
+            navDots.appendChild(dot);
+        });
+
+        function updateCounter() {
+            counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        function goToSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            
+            slides[currentSlide].classList.remove('active');
+            document.querySelectorAll('.nav-dot')[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            document.querySelectorAll('.nav-dot')[currentSlide].classList.add('active');
+            updateCounter();
+        }
+
+        function navigate(direction) {
+            goToSlide(currentSlide + direction);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigate(-1);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goToSlide(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                goToSlide(slides.length - 1);
+            }
+        });
+
+        // Touch support
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                navigate(diff > 0 ? 1 : -1);
+            }
+        });
+
+        // Initialize
+        updateCounter();
+    </script>
+</body>
+</html>
