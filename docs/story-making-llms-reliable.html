@@ -7,79 +7,52 @@
     <style>
         :root {
             --accent: #FF6B9D;
-            --accent-dim: rgba(255, 107, 157, 0.2);
-            --bg: #000;
-            --text: #fff;
-            --text-dim: rgba(255, 255, 255, 0.6);
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --success: #30D158;
-            --error: #FF453A;
-            --warning: #FFD60A;
-            
+            --accent-gradient: linear-gradient(135deg, #FF6B9D 0%, #FF9F0A 100%);
             --font-headline: clamp(32px, 8vw, 72px);
-            --font-medium: clamp(24px, 5vw, 48px);
-            --font-subhead: clamp(18px, 3vw, 28px);
-            --font-body: clamp(14px, 2vw, 18px);
-            --font-small: clamp(12px, 1.5vw, 14px);
-            --font-code: clamp(11px, 1.5vw, 14px);
-            --font-big-number: clamp(48px, 15vw, 120px);
-            
+            --font-medium-headline: clamp(24px, 5vw, 48px);
+            --font-subhead: clamp(16px, 3vw, 32px);
+            --font-big-number: clamp(60px, 20vw, 140px);
             --padding-slide: clamp(20px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 40px);
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            background: #000;
+            color: #fff;
             overflow: hidden;
             overscroll-behavior: none;
         }
-        
-        .deck {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-        }
+
+        .deck { position: relative; width: 100%; height: 100vh; }
         
         .slide {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             min-height: 100vh;
             min-height: 100dvh;
             padding: var(--padding-slide);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
             overflow-y: auto;
             overflow-x: hidden;
         }
         
-        .slide.active {
-            display: flex;
-        }
-        
+        .slide.active { display: flex; }
+
         .section-label {
-            font-size: var(--font-small);
+            font-size: clamp(12px, 1.5vw, 14px);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--accent);
             margin-bottom: 16px;
         }
-        
+
         .headline {
             font-size: var(--font-headline);
             font-weight: 700;
@@ -87,132 +60,92 @@
             line-height: 1.1;
             margin-bottom: 24px;
         }
-        
+
         .subhead {
             font-size: var(--font-subhead);
-            color: var(--text-dim);
+            font-weight: 400;
+            color: rgba(255,255,255,0.7);
             line-height: 1.4;
             max-width: 800px;
         }
-        
+
         .medium-headline {
-            font-size: var(--font-medium);
+            font-size: var(--font-medium-headline);
             font-weight: 600;
             letter-spacing: -1px;
             line-height: 1.2;
             margin-bottom: 32px;
         }
-        
+
         .big-number {
             font-size: var(--font-big-number);
-            font-weight: 700;
-            letter-spacing: -4px;
-            background: linear-gradient(135deg, var(--accent), #FF9F0A);
+            font-weight: 800;
+            background: var(--accent-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            line-height: 1;
         }
-        
+
+        .thirds {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: var(--gap-grid);
+            margin-top: 40px;
+        }
+
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
-            padding: clamp(20px, 4vw, 32px);
+            padding: clamp(16px, 4vw, 28px);
         }
-        
-        .card-title {
-            font-size: var(--font-body);
+
+        .card h3, .card-title {
+            font-size: clamp(18px, 3vw, 24px);
             font-weight: 600;
             margin-bottom: 12px;
             color: var(--accent);
         }
-        
-        .card-text {
-            font-size: var(--font-body);
-            color: var(--text-dim);
+
+        .card p, .card-text {
+            font-size: clamp(14px, 2vw, 16px);
+            color: rgba(255,255,255,0.7);
             line-height: 1.5;
         }
-        
-        .grid-2 {
+
+        .metric-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: var(--gap-grid);
-            margin-top: 32px;
+            margin-top: 40px;
         }
-        
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
-            gap: var(--gap-grid);
-            margin-top: 32px;
+
+        .metric {
+            text-align: center;
         }
-        
-        .code-block {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: clamp(16px, 3vw, 24px);
-            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-            font-size: var(--font-code);
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            overflow-x: auto;
-            margin: 24px 0;
+
+        .metric .value, .stat-number {
+            font-size: clamp(48px, 12vw, 96px);
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .code-block .comment { color: #6e7681; }
-        .code-block .keyword { color: #ff7b72; }
-        .code-block .string { color: #a5d6ff; }
-        .code-block .function { color: #d2a8ff; }
-        .code-block .variable { color: #ffa657; }
-        .code-block .success { color: var(--success); }
-        .code-block .error { color: var(--error); }
-        .code-block .highlight { 
-            background: rgba(255, 107, 157, 0.2); 
-            padding: 2px 6px;
-            border-radius: 4px;
+
+        .metric .label, .stat-label {
+            font-size: clamp(14px, 2vw, 18px);
+            color: rgba(255,255,255,0.6);
+            margin-top: 8px;
         }
-        
-        .comparison {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-            gap: var(--gap-grid);
-            margin-top: 32px;
-        }
-        
-        .comparison-box {
-            padding: clamp(20px, 4vw, 32px);
-            border-radius: 16px;
-        }
-        
-        .comparison-box.before {
-            background: rgba(255, 69, 58, 0.1);
-            border: 1px solid rgba(255, 69, 58, 0.3);
-        }
-        
-        .comparison-box.after {
-            background: rgba(48, 209, 88, 0.1);
-            border: 1px solid rgba(48, 209, 88, 0.3);
-        }
-        
-        .comparison-label {
-            font-size: var(--font-small);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 16px;
-        }
-        
-        .comparison-box.before .comparison-label { color: var(--error); }
-        .comparison-box.after .comparison-label { color: var(--success); }
-        
+
         .timeline {
-            position: relative;
-            margin: 40px 0;
+            margin-top: 40px;
             padding-left: 40px;
+            position: relative;
         }
-        
+
         .timeline::before {
             content: '';
             position: absolute;
@@ -220,14 +153,14 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background: var(--card-border);
+            background: rgba(255,255,255,0.1);
         }
-        
+
         .timeline-item {
             position: relative;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
-        
+
         .timeline-item::before {
             content: '';
             position: absolute;
@@ -238,62 +171,91 @@
             border-radius: 50%;
             background: var(--accent);
         }
-        
-        .timeline-item.success::before { background: var(--success); }
-        .timeline-item.error::before { background: var(--error); }
-        
+
+        .timeline-item.success::before { background: #30D158; }
+        .timeline-item.error::before { background: #FF453A; }
+
         .timeline-version {
-            font-size: var(--font-small);
-            font-weight: 600;
+            font-size: clamp(14px, 2vw, 18px);
+            font-weight: 700;
             color: var(--accent);
             margin-bottom: 4px;
         }
-        
+
         .timeline-title {
-            font-size: var(--font-body);
+            font-size: clamp(14px, 2vw, 16px);
             font-weight: 600;
             margin-bottom: 8px;
         }
-        
+
         .timeline-desc {
-            font-size: var(--font-body);
-            color: var(--text-dim);
+            font-size: clamp(14px, 2vw, 16px);
+            color: rgba(255,255,255,0.7);
         }
-        
-        .quote {
-            font-size: var(--font-medium);
-            font-weight: 500;
-            font-style: italic;
-            line-height: 1.4;
-            color: var(--accent);
-            padding-left: 32px;
-            border-left: 4px solid var(--accent);
-            margin: 40px 0;
+
+        /* Code blocks */
+        .code-block {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: clamp(16px, 3vw, 24px);
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: clamp(11px, 1.5vw, 14px);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            margin: 24px 0;
         }
-        
-        .stats-grid {
+
+        .code-block .comment { color: #6e7681; }
+        .code-block .keyword { color: #ff7b72; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .function { color: #d2a8ff; }
+        .code-block .variable { color: #ffa657; }
+        .code-block .success { color: #30D158; }
+        .code-block .error { color: #FF453A; }
+        .code-block .highlight { 
+            background: rgba(255, 107, 157, 0.2); 
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Comparison boxes */
+        .comparison {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
             gap: var(--gap-grid);
-            margin-top: 40px;
-            text-align: center;
+            margin-top: 32px;
         }
-        
-        .stat-item .stat-number {
-            font-size: clamp(36px, 10vw, 72px);
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent), #FF9F0A);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+
+        .comparison-box {
+            padding: clamp(20px, 4vw, 32px);
+            border-radius: 16px;
         }
-        
-        .stat-item .stat-label {
-            font-size: var(--font-body);
-            color: var(--text-dim);
-            margin-top: 8px;
+
+        .comparison-box.before {
+            background: rgba(255, 69, 58, 0.1);
+            border: 1px solid rgba(255, 69, 58, 0.3);
         }
-        
+
+        .comparison-box.after {
+            background: rgba(48, 209, 88, 0.1);
+            border: 1px solid rgba(48, 209, 88, 0.3);
+        }
+
+        .comparison-label {
+            font-size: clamp(12px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .comparison-box.before .comparison-label { color: #FF453A; }
+        .comparison-box.after .comparison-label { color: #30D158; }
+
+        /* Special boxes */
         .bug-reveal {
             background: linear-gradient(135deg, rgba(255, 69, 58, 0.1), rgba(255, 69, 58, 0.05));
             border: 1px solid rgba(255, 69, 58, 0.3);
@@ -301,12 +263,12 @@
             padding: clamp(24px, 5vw, 40px);
             margin: 32px 0;
         }
-        
+
         .bug-reveal .bug-icon {
             font-size: 48px;
             margin-bottom: 16px;
         }
-        
+
         .insight-box {
             background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(255, 107, 157, 0.05));
             border: 1px solid rgba(255, 107, 157, 0.3);
@@ -314,60 +276,13 @@
             padding: clamp(24px, 5vw, 40px);
             margin: 32px 0;
         }
-        
+
         .insight-box .insight-icon {
             font-size: 48px;
             margin-bottom: 16px;
         }
-        
-        .nav-dots {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 100;
-        }
-        
-        .nav-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--card-border);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-dot.active {
-            background: var(--accent);
-            transform: scale(1.2);
-        }
-        
-        .slide-counter {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            font-size: var(--font-small);
-            color: var(--text-dim);
-            z-index: 100;
-        }
-        
-        .click-zones {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 80px;
-            display: flex;
-            z-index: 50;
-        }
-        
-        .click-zone {
-            flex: 1;
-            cursor: pointer;
-        }
-        
+
+        /* Flow diagram */
         .flow-diagram {
             display: flex;
             flex-wrap: wrap;
@@ -376,34 +291,115 @@
             gap: 16px;
             margin: 32px 0;
         }
-        
+
         .flow-step {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             padding: 16px 24px;
-            font-size: var(--font-body);
+            font-size: clamp(14px, 2vw, 16px);
             text-align: center;
         }
-        
+
         .flow-step.highlight {
-            background: var(--accent-dim);
+            background: rgba(255, 107, 157, 0.2);
             border-color: var(--accent);
         }
-        
+
         .flow-arrow {
-            color: var(--text-dim);
+            color: rgba(255,255,255,0.6);
             font-size: 24px;
         }
-        
-        .center-content {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+
+        /* Quote */
+        .quote {
+            font-size: var(--font-medium-headline);
+            font-weight: 500;
+            font-style: italic;
+            line-height: 1.4;
+            color: var(--accent);
+            padding-left: 32px;
+            border-left: 4px solid var(--accent);
+            margin: 40px 0;
         }
-        
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            transform: scale(1.2);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            z-index: 100;
+        }
+
+        .highlight { color: var(--accent); }
+
+        /* Title slide special styling */
+        .title-slide {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-slide .headline {
+            font-size: clamp(40px, 10vw, 96px);
+        }
+
+        .date {
+            font-size: clamp(14px, 2vw, 18px);
+            color: rgba(255,255,255,0.5);
+            margin-top: 24px;
+        }
+
+        ul.feature-list {
+            list-style: none;
+            margin-top: 24px;
+        }
+
+        ul.feature-list li {
+            font-size: clamp(16px, 2.5vw, 22px);
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 16px;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        ul.feature-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
         @media (max-width: 768px) {
             .timeline { padding-left: 30px; }
             .timeline::before { left: 8px; }
@@ -414,13 +410,11 @@
 <body>
     <div class="deck">
         <!-- Slide 1: Title -->
-        <div class="slide active center-content">
+        <div class="slide title-slide active">
             <div class="section-label">Case Study</div>
             <h1 class="headline">Making LLMs Reliable<br>Through Code</h1>
             <p class="subhead">A debugging journey: 5 recipe versions, 3 bugs found, 1 fundamental insight about AI-assisted development.</p>
-            <div style="margin-top: 48px; color: var(--text-dim); font-size: var(--font-small);">
-                January 2026
-            </div>
+            <div class="date">January 2026</div>
         </div>
         
         <!-- Slide 2: The Problem -->
@@ -429,7 +423,7 @@
             <h2 class="headline">Preserve What Works</h2>
             <p class="subhead">When regenerating documentation, users want to keep their existing content intact - only updating sections that need changes.</p>
             
-            <div class="grid-2">
+            <div class="thirds">
                 <div class="card">
                     <div class="card-title">The Ask</div>
                     <p class="card-text">"When I provide an existing document, preserve sections that don't need changes. Only regenerate what's actually outdated."</p>
@@ -456,7 +450,7 @@
 <span class="keyword">If</span> action_needed is <span class="string">"update"</span>: Revise specific parts only</div>
             
             <div class="bug-reveal">
-                <div class="bug-icon">&#x1F6A8;</div>
+                <div class="bug-icon">🚨</div>
                 <h3 style="font-size: var(--font-subhead); margin-bottom: 12px;">Result: Content Mangled</h3>
                 <p class="card-text">The LLM "preserved" content by summarizing it. Code blocks were paraphrased. Commands were reformatted. Nothing was verbatim.</p>
             </div>
@@ -483,7 +477,7 @@
                     <div class="comparison-label">Before</div>
                     <p class="card-text"><strong>Original:</strong> 6,293 bytes</p>
                     <p class="card-text"><strong>Output:</strong> 5,340 bytes</p>
-                    <p class="card-text" style="margin-top: 12px; color: var(--error);">&#x274C; Lost ~950 bytes somewhere</p>
+                    <p class="card-text" style="margin-top: 12px; color: #FF453A;">❌ Lost ~950 bytes somewhere</p>
                 </div>
                 <div class="comparison-box before">
                     <div class="comparison-label">Still Broken</div>
@@ -499,7 +493,7 @@
             <h2 class="medium-headline">The Markdown Parser Bug</h2>
             
             <div class="bug-reveal">
-                <div class="bug-icon">&#x1F41B;</div>
+                <div class="bug-icon">🐛</div>
                 <h3 style="font-size: var(--font-subhead); margin-bottom: 16px;">Code Comments Mistaken for Headings</h3>
                 <div class="code-block"><span class="comment"># This bash comment inside a code block...</span>
 ```bash
@@ -512,8 +506,8 @@ amplifier
             
             <p class="subhead" style="margin-top: 24px;">
                 <strong>Section 1.2.1 content:</strong><br>
-                Before fix: <span style="color: var(--error);">99 characters</span> (truncated)<br>
-                After fix: <span style="color: var(--success);">737 characters</span> (complete)
+                Before fix: <span style="color: #FF453A;">99 characters</span> (truncated)<br>
+                After fix: <span style="color: #30D158;">737 characters</span> (complete)
             </p>
         </div>
         
@@ -542,7 +536,7 @@ amplifier
                     <div class="comparison-label">Result</div>
                     <p class="card-text"><strong>Original:</strong> 6,293 bytes</p>
                     <p class="card-text"><strong>Output:</strong> 7,211 bytes</p>
-                    <p class="card-text" style="margin-top: 12px; color: var(--success);">&#x2705; All content preserved + new sections added</p>
+                    <p class="card-text" style="margin-top: 12px; color: #30D158;">✅ All content preserved + new sections added</p>
                 </div>
                 <div class="comparison-box after">
                     <div class="comparison-label">Diff Check</div>
@@ -559,25 +553,25 @@ amplifier
             
             <div class="flow-diagram">
                 <div class="flow-step">Generate</div>
-                <div class="flow-arrow">&#x2192;</div>
+                <div class="flow-arrow">→</div>
                 <div class="flow-step">Content Validation</div>
-                <div class="flow-arrow">&#x2192;</div>
-                <div class="flow-step highlight" style="border-color: var(--error);">Fix Issues</div>
-                <div class="flow-arrow">&#x2192;</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step highlight" style="border-color: #FF453A;">Fix Issues</div>
+                <div class="flow-arrow">→</div>
                 <div class="flow-step">Quality Validation</div>
-                <div class="flow-arrow">&#x2192;</div>
-                <div class="flow-step highlight" style="border-color: var(--error);">Fix Issues</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step highlight" style="border-color: #FF453A;">Fix Issues</div>
             </div>
             
             <div class="bug-reveal">
-                <div class="bug-icon">&#x1F92F;</div>
+                <div class="bug-icon">🤯</div>
                 <h3 style="font-size: var(--font-subhead); margin-bottom: 16px;">The "Skip These Sections" Problem</h3>
                 <p class="card-text">We told the LLM: "These sections are preserved - don't modify them during validation fixes."</p>
                 <p class="card-text" style="margin-top: 12px;"><strong>The LLM:</strong> "Sure!" <em>*proceeds to rewrite them anyway*</em></p>
             </div>
             
             <div class="insight-box">
-                <div class="insight-icon">&#x1F4A1;</div>
+                <div class="insight-icon">💡</div>
                 <h3 style="font-size: var(--font-subhead); margin-bottom: 12px;">Root Cause Identified</h3>
                 <p class="card-text">LLMs cannot reliably follow "skip these sections" instructions. They will still touch, modify, or "improve" content they were told to leave alone.</p>
             </div>
@@ -591,11 +585,11 @@ amplifier
             
             <div class="flow-diagram">
                 <div class="flow-step">LLM Validation Fix</div>
-                <div class="flow-arrow">&#x2192;</div>
+                <div class="flow-arrow">→</div>
                 <div class="flow-step highlight">Python Restore</div>
-                <div class="flow-arrow">&#x2192;</div>
+                <div class="flow-arrow">→</div>
                 <div class="flow-step">LLM Quality Fix</div>
-                <div class="flow-arrow">&#x2192;</div>
+                <div class="flow-arrow">→</div>
                 <div class="flow-step highlight">Python Restore</div>
             </div>
             
@@ -619,9 +613,9 @@ amplifier
             <div class="section-label">The Pattern</div>
             <h2 class="medium-headline">Trust But Verify</h2>
             
-            <div class="grid-2">
+            <div class="thirds">
                 <div class="card">
-                    <div class="card-title" style="color: var(--error);">&#x274C; Don't Do This</div>
+                    <div class="card-title" style="color: #FF453A;">❌ Don't Do This</div>
                     <div class="code-block" style="margin: 16px 0;"><span class="comment"># Hoping the LLM follows instructions</span>
 prompt: |
   Fix content issues but 
@@ -630,7 +624,7 @@ prompt: |
 <span class="comment"># Result: LLM modifies them anyway</span></div>
                 </div>
                 <div class="card">
-                    <div class="card-title" style="color: var(--success);">&#x2705; Do This Instead</div>
+                    <div class="card-title" style="color: #30D158;">✅ Do This Instead</div>
                     <div class="code-block" style="margin: 16px 0;"><span class="comment"># Let LLM work, then restore with code</span>
 steps:
   - llm_validation_fix
@@ -656,63 +650,63 @@ steps:
                 <div class="timeline-item error">
                     <div class="timeline-version">v7.1.0</div>
                     <div class="timeline-title">Existing Document Input</div>
-                    <div class="timeline-desc">LLM-based preservation with quality assessment (keep/revise/replace). <span style="color: var(--error);">Failed: LLM rewrote "preserved" content.</span></div>
+                    <div class="timeline-desc">LLM-based preservation with quality assessment (keep/revise/replace). <span style="color: #FF453A;">Failed: LLM rewrote "preserved" content.</span></div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-version">v7.2.0</div>
                     <div class="timeline-title">Deterministic Copy</div>
-                    <div class="timeline-desc">Bash copies sections with action_needed="none" directly. <span style="color: var(--warning);">Partial: Content extraction truncated.</span></div>
+                    <div class="timeline-desc">Bash copies sections with action_needed="none" directly. <span style="color: #FFD60A;">Partial: Content extraction truncated.</span></div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-version">v7.3.0</div>
                     <div class="timeline-title">Skip Validation for Preserved</div>
-                    <div class="timeline-desc">Analysis determines what needs work, validation skips preserved. <span style="color: var(--warning);">Partial: LLM still touched preserved sections.</span></div>
+                    <div class="timeline-desc">Analysis determines what needs work, validation skips preserved. <span style="color: #FFD60A;">Partial: LLM still touched preserved sections.</span></div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-version">v7.4.0</div>
                     <div class="timeline-title">Deterministic Restore</div>
-                    <div class="timeline-desc">Python restores preserved sections after each LLM pass. <span style="color: var(--success);">Success: 100% preservation.</span></div>
+                    <div class="timeline-desc">Python restores preserved sections after each LLM pass. <span style="color: #30D158;">Success: 100% preservation.</span></div>
                 </div>
                 <div class="timeline-item success">
                     <div class="timeline-version">v7.5.0</div>
                     <div class="timeline-title">Code Block Aware Parsing</div>
-                    <div class="timeline-desc">Fixed # comments in code blocks being seen as headings. <span style="color: var(--success);">Complete solution achieved.</span></div>
+                    <div class="timeline-desc">Fixed # comments in code blocks being seen as headings. <span style="color: #30D158;">Complete solution achieved.</span></div>
                 </div>
             </div>
         </div>
         
         <!-- Slide 11: Results -->
-        <div class="slide center-content">
+        <div class="slide title-slide">
             <div class="section-label">Results</div>
             <h2 class="headline">100% Fidelity</h2>
             
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">11</div>
-                    <div class="stat-label">Preserved Sections</div>
+            <div class="metric-grid" style="max-width: 800px;">
+                <div class="metric">
+                    <div class="value">11</div>
+                    <div class="label">Preserved Sections</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Bytes Modified</div>
+                <div class="metric">
+                    <div class="value">0</div>
+                    <div class="label">Bytes Modified</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">5</div>
-                    <div class="stat-label">Recipe Versions</div>
+                <div class="metric">
+                    <div class="value">5</div>
+                    <div class="label">Recipe Versions</div>
                 </div>
             </div>
             
             <div class="insight-box" style="max-width: 700px; margin-top: 48px;">
-                <p class="card-text" style="font-size: var(--font-subhead); color: var(--text);">
+                <p class="card-text" style="font-size: var(--font-subhead); color: #fff;">
                     Validated by <strong>recipe-results-validator</strong>:<br>
-                    All 11 preserved sections are <span style="color: var(--success);">byte-for-byte identical</span> to the original.
+                    All 11 preserved sections are <span style="color: #30D158;">byte-for-byte identical</span> to the original.
                 </p>
             </div>
         </div>
         
         <!-- Slide 12: Key Insight -->
-        <div class="slide center-content">
+        <div class="slide title-slide">
             <div class="section-label">Key Insight</div>
-            <div class="big-number" style="margin-bottom: 32px;">&#x1F4A1;</div>
+            <div class="big-number" style="margin-bottom: 32px;">💡</div>
             <h2 class="headline" style="max-width: 900px;">When Determinism Matters,<br>Use Code Not LLMs</h2>
             <p class="subhead" style="margin-top: 32px; max-width: 700px;">
                 LLMs are powerful for generation and analysis. But for tasks requiring exact reproduction, byte-level accuracy, or strict constraints - use deterministic code.
@@ -724,7 +718,7 @@ steps:
             <div class="section-label">Takeaways</div>
             <h2 class="medium-headline">Patterns for Reliable AI Workflows</h2>
             
-            <div class="grid-3">
+            <div class="thirds">
                 <div class="card">
                     <div class="card-title">1. Sandwich Pattern</div>
                     <p class="card-text">Wrap LLM operations with deterministic code. Pre-process inputs, post-process outputs.</p>
@@ -753,14 +747,14 @@ steps:
         </div>
         
         <!-- Slide 14: CTA -->
-        <div class="slide center-content">
+        <div class="slide title-slide">
             <div class="section-label">Apply This Pattern</div>
             <h2 class="headline">Trust But Verify</h2>
             <p class="subhead" style="margin-top: 24px; max-width: 600px;">
                 The next time you need an LLM to "preserve" or "skip" something, consider: can you enforce that with code instead?
             </p>
             
-            <div class="grid-2" style="max-width: 700px; margin-top: 48px;">
+            <div class="thirds" style="max-width: 700px; margin-top: 48px;">
                 <div class="card">
                     <div class="card-title">Recipe Source</div>
                     <p class="card-text">document-generation-parallel.yaml v7.5.0</p>
@@ -771,97 +765,54 @@ steps:
                 </div>
             </div>
             
-            <div style="margin-top: 48px; padding: 24px; background: var(--accent-dim); border-radius: 12px; max-width: 500px;">
-                <p style="font-size: var(--font-body); color: var(--text);">
+            <div style="margin-top: 48px; padding: 24px; background: rgba(255, 107, 157, 0.2); border-radius: 12px; max-width: 500px;">
+                <p style="font-size: clamp(14px, 2vw, 16px); color: #fff;">
                     <strong>The debugging session that inspired this deck:</strong><br>
-                    <span style="color: var(--text-dim);">~4 hours of iterative problem-solving</span>
+                    <span style="color: rgba(255,255,255,0.6);">~4 hours of iterative problem-solving</span>
                 </p>
             </div>
         </div>
     </div>
-    
+
     <!-- Navigation -->
-    <div class="nav-dots" id="navDots"></div>
-    <div class="slide-counter" id="slideCounter">1 / 14</div>
-    
-    <div class="click-zones">
-        <div class="click-zone" onclick="prevSlide()"></div>
-        <div class="click-zone" onclick="nextSlide()"></div>
-    </div>
-    
+    <div class="nav-dots"></div>
+    <div class="slide-counter">1 / 14</div>
+
     <script>
         const slides = document.querySelectorAll('.slide');
-        const navDots = document.getElementById('navDots');
-        const slideCounter = document.getElementById('slideCounter');
+        const navDots = document.querySelector('.nav-dots');
+        const counter = document.querySelector('.slide-counter');
         let currentSlide = 0;
-        
+
         // Create nav dots
         slides.forEach((_, i) => {
             const dot = document.createElement('div');
             dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
-            dot.onclick = () => goToSlide(i);
+            dot.addEventListener('click', () => goToSlide(i));
             navDots.appendChild(dot);
         });
-        
-        function updateSlide() {
-            slides.forEach((slide, i) => {
-                slide.classList.toggle('active', i === currentSlide);
-            });
-            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
-                dot.classList.toggle('active', i === currentSlide);
-            });
-            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
-        }
-        
-        function nextSlide() {
-            if (currentSlide < slides.length - 1) {
-                currentSlide++;
-                updateSlide();
-            }
-        }
-        
-        function prevSlide() {
-            if (currentSlide > 0) {
-                currentSlide--;
-                updateSlide();
-            }
-        }
-        
+
         function goToSlide(n) {
-            currentSlide = n;
-            updateSlide();
+            slides[currentSlide].classList.remove('active');
+            navDots.children[currentSlide].classList.remove('active');
+            currentSlide = (n + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+            navDots.children[currentSlide].classList.add('active');
+            counter.textContent = `${currentSlide + 1} / ${slides.length}`;
         }
-        
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                prevSlide();
-            } else if (e.key === 'Home') {
-                e.preventDefault();
-                goToSlide(0);
-            } else if (e.key === 'End') {
-                e.preventDefault();
-                goToSlide(slides.length - 1);
-            }
+            if (e.key === 'ArrowRight' || e.key === ' ') goToSlide(currentSlide + 1);
+            if (e.key === 'ArrowLeft') goToSlide(currentSlide - 1);
         });
-        
-        // Touch support
-        let touchStartX = 0;
-        document.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-        });
-        
-        document.addEventListener('touchend', (e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchStartX - touchEndX;
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) nextSlide();
-                else prevSlide();
-            }
+
+        // Click navigation
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.nav-dots')) return;
+            const x = e.clientX / window.innerWidth;
+            if (x > 0.5) goToSlide(currentSlide + 1);
+            else goToSlide(currentSlide - 1);
         });
     </script>
 </body>
