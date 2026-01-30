@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR Review Recipes | Amplifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #FF7F6E;
+            --accent-soft: rgba(255, 127, 110, 0.15);
+            --bg: #0D0D0D;
+            --text: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --text-dim: #636366;
+            --surface: #1C1C1E;
+            --surface-elevated: #2C2C2E;
+            --success: #30D158;
+            --warning: #FFD60A;
+            --error: #FF453A;
+        }
+
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: local('SF Pro Display'), local('SFProDisplay-Regular'), local('-apple-system');
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .deck {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px 120px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 72px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 56px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin-bottom: 40px;
+        }
+
+        h3 {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 24px;
+        }
+
+        p {
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .subtitle {
+            font-size: 32px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .dim {
+            color: var(--text-dim);
+        }
+
+        .small {
+            font-size: 20px;
+        }
+
+        /* Title Slide */
+        .slide.title {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .slide.title h1 {
+            font-size: 96px;
+            margin-bottom: 32px;
+        }
+
+        .slide.title .date {
+            font-size: 24px;
+            color: var(--text-dim);
+            margin-top: 48px;
+        }
+
+        /* Big Number */
+        .big-number {
+            font-size: 180px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        .big-number.smaller {
+            font-size: 120px;
+        }
+
+        /* Metric Cards */
+        .metrics {
+            display: flex;
+            gap: 40px;
+            margin-top: 48px;
+        }
+
+        .metric {
+            flex: 1;
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .metric-value {
+            font-size: 64px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .metric-label {
+            font-size: 22px;
+            color: var(--text-secondary);
+        }
+
+        /* Lists */
+        ul {
+            list-style: none;
+            font-size: 28px;
+        }
+
+        ul li {
+            padding: 16px 0;
+            padding-left: 40px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        ul li strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 32px;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 20px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 32px;
+        }
+
+        .code-block .comment {
+            color: var(--text-dim);
+        }
+
+        .code-block .keyword {
+            color: var(--accent);
+        }
+
+        .code-block .string {
+            color: var(--success);
+        }
+
+        /* Pipeline Diagram */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 48px;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-step {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px 28px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .pipeline-step .step-number {
+            font-size: 14px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .pipeline-step .step-name {
+            color: var(--text);
+        }
+
+        .pipeline-arrow {
+            color: var(--text-dim);
+            font-size: 24px;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-top: 40px;
+        }
+
+        .column {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .column h3 {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .column h3 .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .column.static h3 .icon {
+            background: rgba(100, 210, 255, 0.2);
+        }
+
+        .column.dynamic h3 .icon {
+            background: rgba(48, 209, 88, 0.2);
+        }
+
+        .column ul li {
+            font-size: 22px;
+            padding: 12px 0;
+            padding-left: 32px;
+        }
+
+        .column ul li::before {
+            width: 8px;
+            height: 8px;
+        }
+
+        /* Quote Block */
+        .quote {
+            font-size: 36px;
+            font-style: italic;
+            color: var(--text);
+            border-left: 4px solid var(--accent);
+            padding-left: 32px;
+            margin: 40px 0;
+        }
+
+        /* Timeline */
+        .timeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 60px;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 32px;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: var(--surface-elevated);
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            z-index: 1;
+        }
+
+        .timeline-dot {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 4px solid var(--bg);
+        }
+
+        .timeline-label {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .timeline-sublabel {
+            font-size: 16px;
+            color: var(--text-dim);
+            text-align: center;
+        }
+
+        /* Cycle Diagram */
+        .cycle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .cycle-step {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 32px 40px;
+            text-align: center;
+        }
+
+        .cycle-step .step-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .cycle-step .step-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .cycle-arrow {
+            font-size: 32px;
+            color: var(--accent);
+        }
+
+        /* Comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 40px;
+            align-items: start;
+            margin-top: 48px;
+        }
+
+        .comparison-side {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 36px;
+        }
+
+        .comparison-side h3 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comparison-side.before h3 {
+            color: var(--text-dim);
+        }
+
+        .comparison-side.after h3 {
+            color: var(--success);
+        }
+
+        .comparison-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: var(--accent);
+            padding-top: 60px;
+        }
+
+        .comparison-side ul li {
+            font-size: 20px;
+            padding: 10px 0;
+            padding-left: 28px;
+        }
+
+        /* Status Indicator */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .status.pass {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--success);
+        }
+
+        .status.fail {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--error);
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: var(--accent-soft);
+            border-radius: 16px;
+            padding: 32px;
+            margin-top: 32px;
+        }
+
+        .highlight-box p {
+            color: var(--text);
+            font-size: 24px;
+        }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--surface-elevated);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            transform: scale(1.2);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 40px;
+            right: 60px;
+            font-size: 16px;
+            color: var(--text-dim);
+            font-variant-numeric: tabular-nums;
+            z-index: 100;
+        }
+
+        /* Click Zones */
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 100px;
+            width: 25%;
+            z-index: 50;
+            cursor: pointer;
+        }
+
+        .click-zone.left {
+            left: 0;
+        }
+
+        .click-zone.right {
+            right: 0;
+        }
+
+        /* Shadow Container Visual */
+        .shadow-visual {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+            border: 2px solid var(--surface-elevated);
+            position: relative;
+        }
+
+        .shadow-visual::before {
+            content: 'ISOLATED CONTAINER';
+            position: absolute;
+            top: -12px;
+            left: 32px;
+            background: var(--bg);
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+        }
+
+        .shadow-visual .inner-steps {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .shadow-visual .inner-step {
+            background: var(--surface-elevated);
+            border-radius: 12px;
+            padding: 16px 24px;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .shadow-visual .inner-step .check {
+            color: var(--success);
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="deck">
+        <!-- Slide 1: Title -->
+        <div class="slide title active" data-slide="1">
+            <h1>PR Review <span class="accent">Recipes</span></h1>
+            <p class="subtitle">Automating code quality with deterministic workflows</p>
+            <p class="date dim">January 2026</p>
+        </div>
+
+        <!-- Slide 2: The Goal -->
+        <div class="slide" data-slide="2">
+            <h2>The Goal</h2>
+            <p>Automate PR review for <strong style="color: var(--text)">amplifier-app-cli</strong> using Amplifier's recipe system.</p>
+            <ul style="margin-top: 48px;">
+                <li><strong>Deterministic</strong> - Same inputs, same outputs, every time</li>
+                <li><strong>Comprehensive</strong> - Code quality, security, and runtime validation</li>
+                <li><strong>Fast feedback</strong> - Catch issues before merge</li>
+            </ul>
+        </div>
+
+        <!-- Slide 3: Version 1 -->
+        <div class="slide" data-slide="3">
+            <h2>Version 1</h2>
+            <p>Built confidence with foundational checks</p>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value">Ruff</div>
+                    <div class="metric-label">Linting & formatting</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">Pyright</div>
+                    <div class="metric-label">Type checking</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">CLI</div>
+                    <div class="metric-label">--help, --version</div>
+                </div>
+            </div>
+            <p style="margin-top: 48px;" class="dim small">Solid foundation. But was it enough?</p>
+        </div>
+
+        <!-- Slide 4: The Gap -->
+        <div class="slide" data-slide="4">
+            <h2>The Gap</h2>
+            <p>A routine PR merged. All checks passed.</p>
+            <div class="highlight-box" style="margin-top: 48px;">
+                <p><strong style="color: var(--error);">Then it failed at runtime.</strong></p>
+                <p style="margin-top: 16px; font-size: 20px; color: var(--text-secondary);">The issue only appeared when users created actual sessions - something our recipe never tested.</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Root Cause -->
+        <div class="slide" data-slide="5">
+            <h2>Root Cause</h2>
+            <p class="dim">Found fast. Fixed the same day.</p>
+            <div class="comparison">
+                <div class="comparison-side before">
+                    <h3><span class="status fail">Tested</span></h3>
+                    <ul>
+                        <li>amplifier --help</li>
+                        <li>amplifier --version</li>
+                        <li>Static code analysis</li>
+                    </ul>
+                </div>
+                <div class="comparison-divider"></div>
+                <div class="comparison-side after">
+                    <h3><span class="status pass">Needed</span></h3>
+                    <ul>
+                        <li>Real session creation</li>
+                        <li>Tool invocations</li>
+                        <li>Provider connections</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="margin-top: 40px;" class="dim small">We tested that it launched. We didn't test what users actually do.</p>
+        </div>
+
+        <!-- Slide 6: The Fix -->
+        <div class="slide" data-slide="6">
+            <div class="big-number smaller">Same Day</div>
+            <h3 style="margin-top: 24px;">Issue discovered, root-caused, and recipe improved</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">Discovered</div>
+                    <div class="timeline-sublabel">Runtime failure</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">Root Cause</div>
+                    <div class="timeline-sublabel">Gap identified</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">Improved</div>
+                    <div class="timeline-sublabel">Recipe updated</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">Validated</div>
+                    <div class="timeline-sublabel">Tested against original PR</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: How It Works Now -->
+        <div class="slide" data-slide="7">
+            <h2>How the Recipe Works Now</h2>
+            <p>Seven phases, fully automated</p>
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <span class="step-number">1</span>
+                    <span class="step-name">FETCH</span>
+                </div>
+                <span class="pipeline-arrow"></span>
+                <div class="pipeline-step">
+                    <span class="step-number">2</span>
+                    <span class="step-name">CLONE</span>
+                </div>
+                <span class="pipeline-arrow"></span>
+                <div class="pipeline-step">
+                    <span class="step-number">3</span>
+                    <span class="step-name">ANALYZE</span>
+                </div>
+                <span class="pipeline-arrow"></span>
+                <div class="pipeline-step">
+                    <span class="step-number">4</span>
+                    <span class="step-name">SHADOW</span>
+                </div>
+                <span class="pipeline-arrow"></span>
+                <div class="pipeline-step">
+                    <span class="step-number">5</span>
+                    <span class="step-name">SMOKE</span>
+                </div>
+                <span class="pipeline-arrow"></span>
+                <div class="pipeline-step">
+                    <span class="step-number">6</span>
+                    <span class="step-name">REVIEW</span>
+                </div>
+                <span class="pipeline-arrow"></span>
+                <div class="pipeline-step">
+                    <span class="step-number">7</span>
+                    <span class="step-name">REPORT</span>
+                </div>
+            </div>
+            <div class="code-block" style="margin-top: 48px; font-size: 16px;">
+                <span class="comment"># PR metadata from GitHub</span>  <span class="keyword">FETCH</span><br>
+                <span class="comment"># Clone PR branch + amplifier-core</span>  <span class="keyword">CLONE</span><br>
+                <span class="comment"># Cross-repo contract checking</span>  <span class="keyword">ANALYZE</span><br>
+                <span class="comment"># Create isolated container</span>  <span class="keyword">SHADOW</span><br>
+                <span class="comment"># Real sessions, tools, providers</span>  <span class="keyword">SMOKE</span><br>
+                <span class="comment"># Code quality, security audit</span>  <span class="keyword">REVIEW</span><br>
+                <span class="comment"># Generate findings</span>  <span class="keyword">REPORT</span>
+            </div>
+        </div>
+
+        <!-- Slide 8: Two Layers -->
+        <div class="slide" data-slide="8">
+            <h2>Two Layers of Detection</h2>
+            <div class="two-column">
+                <div class="column static">
+                    <h3>
+                        <span class="icon"></span>
+                        Static Analysis
+                    </h3>
+                    <ul>
+                        <li><strong>Contract checking</strong> - API signatures between repos</li>
+                        <li><strong>Breaking changes</strong> - Removed parameters, changed types</li>
+                        <li><strong>Import validation</strong> - Module dependencies</li>
+                    </ul>
+                    <p style="margin-top: 24px; font-size: 18px;" class="dim">Catches: What <em>could</em> break</p>
+                </div>
+                <div class="column dynamic">
+                    <h3>
+                        <span class="icon"></span>
+                        Dynamic Testing
+                    </h3>
+                    <ul>
+                        <li><strong>Shadow environment</strong> - Isolated container</li>
+                        <li><strong>Real user flows</strong> - Session creation, tool calls</li>
+                        <li><strong>Runtime validation</strong> - Module loading, execution</li>
+                    </ul>
+                    <p style="margin-top: 24px; font-size: 18px;" class="dim">Catches: What <em>does</em> break</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Shadow Environment -->
+        <div class="slide" data-slide="9">
+            <h2>Shadow Environment</h2>
+            <p>Test what users actually do, in complete isolation</p>
+            <div class="shadow-visual">
+                <div class="inner-steps">
+                    <div class="inner-step"><span class="check"></span>Install from PR code</div>
+                    <div class="inner-step"><span class="check"></span>Create real sessions</div>
+                    <div class="inner-step"><span class="check"></span>Invoke tools</div>
+                    <div class="inner-step"><span class="check"></span>Connect providers</div>
+                    <div class="inner-step"><span class="check"></span>Run smoke tests</div>
+                </div>
+            </div>
+            <p style="margin-top: 40px;" class="small">Safe. Repeatable. Tests the full user experience before merge.</p>
+        </div>
+
+        <!-- Slide 10: Validation -->
+        <div class="slide" data-slide="10">
+            <h2>Validation</h2>
+            <p>Tested the improved recipe against the PR that got through</p>
+            <div class="metrics" style="margin-top: 48px;">
+                <div class="metric">
+                    <div class="metric-value" style="color: #64D2FF;"></div>
+                    <div class="metric-label">Static analysis caught the contract issue</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" style="color: var(--success);"></div>
+                    <div class="metric-label">Shadow smoke tests caught the runtime failure</div>
+                </div>
+            </div>
+            <div class="highlight-box">
+                <p><strong>Both layers now catch it.</strong> The gap is closed.</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: The Pattern -->
+        <div class="slide" data-slide="11">
+            <h2>The Pattern</h2>
+            <p class="dim">Each gap becomes the next improvement</p>
+            <div class="cycle">
+                <div class="cycle-step">
+                    <div class="step-icon"></div>
+                    <div class="step-text">Build</div>
+                </div>
+                <div class="cycle-arrow"></div>
+                <div class="cycle-step">
+                    <div class="step-icon"></div>
+                    <div class="step-text">Test</div>
+                </div>
+                <div class="cycle-arrow"></div>
+                <div class="cycle-step">
+                    <div class="step-icon"></div>
+                    <div class="step-text">Learn</div>
+                </div>
+                <div class="cycle-arrow"></div>
+                <div class="cycle-step">
+                    <div class="step-icon"></div>
+                    <div class="step-text">Improve</div>
+                </div>
+                <div class="cycle-arrow"></div>
+                <div class="cycle-step">
+                    <div class="step-icon"></div>
+                    <div class="step-text">Repeat</div>
+                </div>
+            </div>
+            <p style="margin-top: 60px; text-align: center; font-size: 24px;">Not a failure. A feedback loop.</p>
+        </div>
+
+        <!-- Slide 12: CTA -->
+        <div class="slide title" data-slide="12">
+            <h1>Ship with <span class="accent">Confidence</span></h1>
+            <p class="subtitle">PR Review Recipes - Now in Amplifier</p>
+            <ul style="margin-top: 48px; text-align: left; display: inline-block;">
+                <li><strong>PR Review Bundle:</strong> <a href="https://github.com/robotdad/amplifier-bundle-pr-review" style="color: var(--accent);">github.com/robotdad/amplifier-bundle-pr-review</a></li>
+                <li><strong>Smoke Test Bundle:</strong> <a href="https://github.com/samueljklee/amplifier-bundle-smoke-test" style="color: var(--accent);">github.com/samueljklee/amplifier-bundle-smoke-test</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-dots"></div>
+    <div class="slide-counter">1 / 12</div>
+    <div class="click-zone left"></div>
+    <div class="click-zone right"></div>
+
+    <script>
+        const deck = {
+            current: 1,
+            total: 12,
+
+            init() {
+                this.renderDots();
+                this.bindEvents();
+                this.goto(1);
+            },
+
+            renderDots() {
+                const container = document.querySelector('.nav-dots');
+                for (let i = 1; i <= this.total; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+                    dot.dataset.slide = i;
+                    dot.addEventListener('click', () => this.goto(i));
+                    container.appendChild(dot);
+                }
+            },
+
+            bindEvents() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowRight' || e.key === ' ') {
+                        e.preventDefault();
+                        this.next();
+                    } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        this.prev();
+                    }
+                });
+
+                document.querySelector('.click-zone.left').addEventListener('click', () => this.prev());
+                document.querySelector('.click-zone.right').addEventListener('click', () => this.next());
+            },
+
+            goto(n) {
+                if (n < 1 || n > this.total) return;
+                
+                document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+                document.querySelector(`[data-slide="${n}"]`).classList.add('active');
+
+                document.querySelectorAll('.nav-dot').forEach(d => d.classList.remove('active'));
+                document.querySelector(`.nav-dot[data-slide="${n}"]`).classList.add('active');
+
+                document.querySelector('.slide-counter').textContent = `${n} / ${this.total}`;
+                this.current = n;
+            },
+
+            next() {
+                if (this.current < this.total) this.goto(this.current + 1);
+            },
+
+            prev() {
+                if (this.current > 1) this.goto(this.current - 1);
+            }
+        };
+
+        deck.init();
+    </script>
+</body>
+</html>
