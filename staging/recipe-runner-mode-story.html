@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Runner Mode: A Story of Human-AI Collaboration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #5E5CE6;
+            --accent-light: #A5A4F3;
+            --accent-dim: rgba(94, 92, 230, 0.3);
+            --bg: #000;
+            --text: #fff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --green: #30D158;
+            --red: #FF6B6B;
+            --orange: #FF9F0A;
+            --blue: #64D2FF;
+            --purple: #BF5AF2;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        /* Slide Container */
+        .deck {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: clamp(40px, 6vw, 80px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .slide.centered {
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Typography */
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .headline {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .medium-headline {
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 600;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        .subhead {
+            font-size: clamp(18px, 3vw, 28px);
+            color: var(--text-dim);
+            line-height: 1.5;
+            max-width: 800px;
+        }
+
+        .body-text {
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* Act Dividers */
+        .act-bg {
+            position: absolute;
+            font-size: clamp(120px, 30vw, 240px);
+            font-weight: 700;
+            color: rgba(94, 92, 230, 0.15);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .act-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+
+        .card-title {
+            font-size: clamp(18px, 2.5vw, 24px);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: clamp(16px, 3vw, 24px);
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: clamp(12px, 1.6vw, 15px);
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .c-green { color: #30D158; }
+        .c-blue { color: #64D2FF; }
+        .c-purple { color: #BF5AF2; }
+        .c-orange { color: #FF9F0A; }
+        .c-gray { color: rgba(255, 255, 255, 0.5); }
+        .c-yellow { color: #FFD60A; }
+        .c-red { color: #FF6B6B; }
+
+        /* Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+            margin-top: 32px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+            margin-top: 32px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+            margin-top: 32px;
+        }
+
+        /* Comparison Cards */
+        .comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+            margin-top: 32px;
+        }
+
+        .comparison-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+
+        .comparison-card.before { border-color: rgba(255, 107, 107, 0.4); }
+        .comparison-card.after { border-color: rgba(48, 209, 88, 0.4); }
+
+        .comparison-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .comparison-label.before { color: var(--red); }
+        .comparison-label.after { color: var(--green); }
+
+        /* Stats */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+            gap: clamp(24px, 4vw, 48px);
+            margin-top: 48px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: clamp(56px, 12vw, 96px);
+            font-weight: 700;
+            letter-spacing: -3px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+
+        /* Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 32px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-size: clamp(16px, 2vw, 20px);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-desc {
+            font-size: clamp(14px, 1.8vw, 16px);
+            color: var(--text-dim);
+        }
+
+        /* Quote */
+        .quote {
+            font-size: clamp(20px, 4vw, 32px);
+            font-style: italic;
+            color: var(--text-dim);
+            border-left: 3px solid var(--accent);
+            padding-left: 24px;
+            margin: 32px 0;
+            max-width: 700px;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: clamp(16px, 3vw, 24px);
+            margin-top: 32px;
+        }
+
+        /* Flow Diagram */
+        .flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 40px;
+        }
+
+        .flow-step {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 500;
+            font-size: clamp(13px, 1.8vw, 16px);
+        }
+
+        .flow-arrow {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .flow { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+
+        /* Icon Cards */
+        .icon-card {
+            text-align: center;
+            padding: clamp(24px, 4vw, 40px) clamp(16px, 3vw, 24px);
+        }
+
+        .icon {
+            font-size: clamp(40px, 8vw, 56px);
+            margin-bottom: 16px;
+        }
+
+        /* Emphasis */
+        .emphasis { color: var(--accent); font-weight: 600; }
+        .success { color: var(--green); }
+        .warning { color: var(--orange); }
+        .error { color: var(--red); }
+
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            padding: 0;
+        }
+
+        .nav-dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-dot.active {
+            background: var(--accent);
+            transform: scale(1.3);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 13px;
+            color: var(--text-dim);
+            z-index: 1000;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Click Zones */
+        .click-prev, .click-next {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 25%;
+            z-index: 100;
+            cursor: pointer;
+        }
+
+        .click-prev { left: 0; }
+        .click-next { right: 0; }
+    </style>
+</head>
+<body>
+    <div class="deck">
+        <!-- Slide 1: Title -->
+        <div class="slide active centered">
+            <div class="section-label">Amplifier Stories</div>
+            <h1 class="headline">Recipe Runner Mode</h1>
+            <p class="subhead">A Story of Human-AI Collaboration</p>
+            <p class="body-text" style="margin-top: 48px; color: var(--accent);">January 2026</p>
+        </div>
+
+        <!-- Slide 2: Act 1 -->
+        <div class="slide centered">
+            <div class="act-bg">1</div>
+            <div class="act-content">
+                <div class="section-label">Act 1</div>
+                <h1 class="headline">The Problem</h1>
+                <p class="subhead">When agents improvise instead of following instructions</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Scenario -->
+        <div class="slide">
+            <div class="section-label">The Scenario</div>
+            <h2 class="medium-headline">Authoring a PR Review Recipe</h2>
+            <p class="subhead">A user was writing a recipe to automate code reviews...</p>
+            
+            <div class="code-block" style="margin-top: 32px;"><span class="c-gray"># pr-review.yaml (with typos and errors)</span>
+<span class="c-purple">name:</span> <span class="c-green">"PR Review Recipe"</span>
+<span class="c-purple">steps:</span>
+  - <span class="c-purple">action:</span> <span class="c-green">"fetch_pr_detials"</span>  <span class="c-gray"># typo!</span>
+    <span class="c-purple">with:</span>
+      <span class="c-blue">pr_number:</span> <span class="c-orange">${context.pr}</span>  <span class="c-gray"># wrong syntax</span>
+  - <span class="c-purple">action:</span> <span class="c-green">"analyz_code"</span>  <span class="c-gray"># another typo</span></div>
+        </div>
+
+        <!-- Slide 4: What Happened -->
+        <div class="slide">
+            <div class="section-label">What Happened</div>
+            <h2 class="medium-headline">Agent Improvisation</h2>
+            
+            <div class="comparison">
+                <div class="comparison-card before">
+                    <div class="comparison-label before">Expected</div>
+                    <p class="body-text" style="color: #fff; margin-bottom: 12px;">
+                        "Your recipe has errors on lines 4 and 7. Here's how to fix them..."
+                    </p>
+                    <p class="body-text">Report the problem, let user fix it</p>
+                </div>
+                <div class="comparison-card" style="border-color: rgba(255, 69, 58, 0.5);">
+                    <div class="comparison-label before">Actual</div>
+                    <p class="body-text" style="color: #fff; margin-bottom: 12px;">
+                        "I'll fetch the PR details for you and analyze the code..."
+                    </p>
+                    <p class="body-text">Agent read the recipe and <span class="error">executed the steps itself</span></p>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p class="body-text" style="color: #fff;">
+                    The agent tried to be helpful by doing what the recipe described, 
+                    instead of running the recipe through the proper system.
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 5: The Frustration -->
+        <div class="slide centered">
+            <div class="section-label">The Frustration</div>
+            <div class="quote">
+                "I want the recipe to run, not for the agent to improvise and do it itself."
+            </div>
+            <p class="body-text" style="margin-top: 24px;">
+                The CLI tool existed, but users wanted a <span class="emphasis">human way</span> to say:<br>
+                "Run this recipe, but that's all - don't do it yourself"
+            </p>
+        </div>
+
+        <!-- Slide 6: Act 2 -->
+        <div class="slide centered">
+            <div class="act-bg">2</div>
+            <div class="act-content">
+                <div class="section-label">Act 2</div>
+                <h1 class="headline">The Solution Emerges</h1>
+                <p class="subhead">Amplifier suggests the "mode" approach</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: The Conversation -->
+        <div class="slide">
+            <div class="section-label">The Conversation</div>
+            <h2 class="medium-headline">Amplifier as Architect</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background: var(--blue);"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">User describes the need</div>
+                        <div class="timeline-desc">"I want to restrict what the agent can do when I'm testing recipes..."</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Amplifier suggests modes</div>
+                        <div class="timeline-desc">"Modes are runtime behavior overlays that restrict what tools an agent can use. You could create a mode that only allows the recipes tool."</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background: var(--green);"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Collaborative design</div>
+                        <div class="timeline-desc">Together, they designed the recipe-runner mode specification</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: The Mode Config -->
+        <div class="slide">
+            <div class="section-label">The Solution</div>
+            <h2 class="medium-headline">.amplifier/modes/recipe-runner.md</h2>
+            
+            <div class="code-block" style="margin-top: 32px;"><span class="c-gray"># Recipe Runner Mode</span>
+
+<span class="c-purple">tool_policies:</span>
+  <span class="c-blue">default_action:</span> <span class="c-orange">block</span>   <span class="c-gray"># Block everything by default</span>
+
+<span class="c-purple">tools:</span>
+  <span class="c-blue">recipes:</span> <span class="c-green">safe</span>            <span class="c-gray"># Only allow the recipes tool</span></div>
+
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card">
+                    <div class="card-title">Default: Block</div>
+                    <p class="body-text">All tools are blocked unless explicitly allowed. No file edits, no bash, no web access.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Exception: Recipes</div>
+                    <p class="body-text">The <code>recipes</code> tool is marked as <span class="success">safe</span> - the agent can execute, resume, and manage recipes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Before/After -->
+        <div class="slide">
+            <div class="section-label">The Difference</div>
+            <h2 class="medium-headline">Before vs. After</h2>
+            
+            <div class="comparison">
+                <div class="comparison-card before">
+                    <div class="comparison-label before">Without Mode</div>
+                    <div class="code-block" style="font-size: 13px;"><span class="c-gray"># User: "Run my PR review recipe"</span>
+
+<span class="c-yellow">Agent thinks:</span> "I'll help with PR review!"
+<span class="c-yellow">Agent does:</span>
+  - Reads the recipe file
+  - Tries to fetch PR details itself
+  - Calls git, reads files, etc.
+  - <span class="c-orange">Improvises the workflow</span></div>
+                </div>
+                <div class="comparison-card after">
+                    <div class="comparison-label after">With Recipe-Runner Mode</div>
+                    <div class="code-block" style="font-size: 13px;"><span class="c-gray"># User: "Run my PR review recipe"</span>
+
+<span class="c-green">Agent thinks:</span> "I can only use recipes tool"
+<span class="c-green">Agent does:</span>
+  - Calls recipes(execute, "pr-review.yaml")
+  - Recipe system validates YAML
+  - Reports errors if any
+  - <span class="c-green">Proper recipe execution</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Act 3 -->
+        <div class="slide centered">
+            <div class="act-bg">3</div>
+            <div class="act-content">
+                <div class="section-label">Act 3</div>
+                <h1 class="headline">Demo Day</h1>
+                <p class="subhead">Sharing the solution with the team</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Thursday Demo -->
+        <div class="slide">
+            <div class="section-label">Thursday Meeting</div>
+            <h2 class="medium-headline">Team Demo: Recipe Runner Mode</h2>
+            
+            <div class="grid-2">
+                <div class="card icon-card">
+                    <div class="icon">+1</div>
+                    <div class="card-title">Great Reception</div>
+                    <p class="body-text">Team saw immediate value in restricted execution modes</p>
+                </div>
+                <div class="card icon-card">
+                    <div class="icon">?</div>
+                    <div class="card-title">A Question Arose</div>
+                    <p class="body-text">"Can I share this mode with others?"</p>
+                </div>
+            </div>
+            
+            <div class="quote" style="margin-top: 48px;">
+                "Can I share this mode in a bundle?"
+            </div>
+        </div>
+
+        <!-- Slide 12: Bundle Decision -->
+        <div class="slide">
+            <div class="section-label">Architectural Guidance</div>
+            <h2 class="medium-headline">Where Should It Live?</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background: var(--blue);"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">User asks</div>
+                        <div class="timeline-desc">"Can I share this mode in a bundle? Maybe the PR review bundle?"</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Amplifier advises</div>
+                        <div class="timeline-desc">"I'd suggest the <span class="emphasis">recipes bundle</span> instead - this mode is general-purpose, not specific to PR reviews."</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="background: var(--green);"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">User agrees</div>
+                        <div class="timeline-desc">"Good call - better architecture."</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p class="body-text" style="color: #fff;">
+                    <span class="emphasis">Amplifier as architectural advisor</span> - not just executing commands, 
+                    but providing guidance on system design and organization.
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 13: Act 4 -->
+        <div class="slide centered">
+            <div class="act-bg">4</div>
+            <div class="act-content">
+                <div class="section-label">Act 4</div>
+                <h1 class="headline">The Plot Twist</h1>
+                <p class="subhead">A bug lurks in the mode system</p>
+            </div>
+        </div>
+
+        <!-- Slide 14: Bug Discovery -->
+        <div class="slide">
+            <div class="section-label">Bug Discovery</div>
+            <h2 class="medium-headline">When Adding to the Bundle...</h2>
+            
+            <div class="code-block" style="margin-top: 32px;"><span class="c-gray"># Trying to use the bundled mode</span>
+<span class="c-yellow">$</span> amplifier --mode @recipes:recipe-runner
+
+<span class="c-red">Error: Tool 'recipes' is blocked by current mode policy</span>
+
+<span class="c-gray"># Wait, what? The mode explicitly allows recipes!</span></div>
+
+            <div class="grid-2" style="margin-top: 40px;">
+                <div class="card" style="border-color: rgba(255, 107, 107, 0.4);">
+                    <div class="card-title" style="color: var(--red);">Problem 1</div>
+                    <p class="body-text">Mode system couldn't discover modes from other bundles</p>
+                </div>
+                <div class="card" style="border-color: rgba(255, 107, 107, 0.4);">
+                    <div class="card-title" style="color: var(--red);">Problem 2</div>
+                    <p class="body-text">The <code>recipes</code> tool was being blocked despite being marked <code>safe</code></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Root Cause -->
+        <div class="slide">
+            <div class="section-label">Root Cause</div>
+            <h2 class="medium-headline">Schema Mismatch</h2>
+            
+            <div class="comparison">
+                <div class="comparison-card before">
+                    <div class="comparison-label before">Mode Config Provided</div>
+                    <div class="code-block" style="font-size: 13px;"><span class="c-purple">tool_policies:</span>
+  <span class="c-blue">default_action:</span> block
+<span class="c-purple">tools:</span>
+  <span class="c-blue">recipes:</span> safe</div>
+                </div>
+                <div class="comparison-card" style="border-color: rgba(255, 159, 10, 0.5);">
+                    <div class="comparison-label" style="color: var(--orange);">Code Expected</div>
+                    <div class="code-block" style="font-size: 13px;"><span class="c-purple">tool_policies:</span>
+  <span class="c-blue">default_action:</span> block
+  <span class="c-blue">tools:</span>           <span class="c-gray"># nested!</span>
+    <span class="c-blue">recipes:</span> safe</div>
+                </div>
+            </div>
+            
+            <p class="body-text" style="margin-top: 40px; text-align: center;">
+                The hooks-mode code expected <code>tools</code> to be nested under <code>tool_policies</code>,<br>
+                but the mode file had it at the top level.
+            </p>
+        </div>
+
+        <!-- Slide 16: Act 5 -->
+        <div class="slide centered">
+            <div class="act-bg">5</div>
+            <div class="act-content">
+                <div class="section-label">Act 5</div>
+                <h1 class="headline">The Fix</h1>
+                <p class="subhead">During a meeting, with minimal attention</p>
+            </div>
+        </div>
+
+        <!-- Slide 17: Meeting Fix -->
+        <div class="slide">
+            <div class="section-label">Minimal Attention Required</div>
+            <h2 class="medium-headline">User Was in a Team Meeting</h2>
+            
+            <div class="grid-2">
+                <div>
+                    <p class="body-text" style="margin-bottom: 24px;">
+                        The user described the bug briefly and let Amplifier work autonomously:
+                    </p>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Investigate</div>
+                                <div class="timeline-desc">Found the session where the bug occurred</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Diagnose</div>
+                                <div class="timeline-desc">Identified the schema mismatch in hooks-mode</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Fix</div>
+                                <div class="timeline-desc">Updated parser to handle both schemas</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Enhance</div>
+                                <div class="timeline-desc">Implemented cross-bundle mode discovery</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot" style="background: var(--green);"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Test</div>
+                                <div class="timeline-desc">Used shadow environments to verify</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label" style="font-size: clamp(18px, 3vw, 24px);">User prompts needed</div>
+                    <p class="body-text" style="margin-top: 16px;">
+                        Complex debugging and fix<br>with minimal human attention
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: Act 6 -->
+        <div class="slide centered">
+            <div class="act-bg">6</div>
+            <div class="act-content">
+                <div class="section-label">Act 6</div>
+                <h1 class="headline">The Shadow<br>Environment Hero</h1>
+                <p class="subhead">Safe testing for dangerous changes</p>
+            </div>
+        </div>
+
+        <!-- Slide 19: Shadow Environment -->
+        <div class="slide">
+            <div class="section-label">Safe Testing</div>
+            <h2 class="medium-headline">Why Shadow Environments Mattered</h2>
+            
+            <p class="body-text" style="margin-bottom: 32px;">
+                The fix involved changes to <span class="emphasis">core mode/hook code</span> - 
+                the very system that controls tool access. Testing this in production was risky.
+            </p>
+            
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title" style="color: var(--green);">Isolation</div>
+                    <p class="body-text">Changes tested in an isolated container, separate from the main environment</p>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--blue);">Verification</div>
+                    <p class="body-text">Confirmed the fix worked before committing to the real codebase</p>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--purple);">Regression Check</div>
+                    <p class="body-text">Caught potential issues that could break other modes</p>
+                </div>
+            </div>
+            
+            <div class="flow" style="margin-top: 48px;">
+                <div class="flow-step">Code Change</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">Shadow Env</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">Test Mode</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" style="background: rgba(48, 209, 88, 0.3); border-color: var(--green);">Commit</div>
+            </div>
+        </div>
+
+        <!-- Slide 20: Key Themes -->
+        <div class="slide">
+            <div class="section-label">Takeaways</div>
+            <h2 class="medium-headline">Key Themes</h2>
+            
+            <div class="grid-4">
+                <div class="card icon-card">
+                    <div class="icon" style="color: var(--accent);">&#x1F91D;</div>
+                    <div class="card-title">Human-AI Collaboration</div>
+                    <p class="body-text">Amplifier as architectural advisor, not just code executor</p>
+                </div>
+                <div class="card icon-card">
+                    <div class="icon" style="color: var(--orange);">&#x1F4A1;</div>
+                    <div class="card-title">Minimal Attention</div>
+                    <p class="body-text">Complex debugging with just a few user prompts</p>
+                </div>
+                <div class="card icon-card">
+                    <div class="icon" style="color: var(--green);">&#x1F4E6;</div>
+                    <div class="card-title">Extensibility</div>
+                    <p class="body-text">Modes can be shared in bundles - community benefit</p>
+                </div>
+                <div class="card icon-card">
+                    <div class="icon" style="color: var(--blue);">&#x1F6E1;</div>
+                    <div class="card-title">Safety</div>
+                    <p class="body-text">Shadow environments for testing changes to core systems</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 21: The Journey -->
+        <div class="slide centered">
+            <div class="section-label">The Journey</div>
+            <h2 class="medium-headline">Organic Problem Solving</h2>
+            
+            <div class="flow" style="margin-top: 40px;">
+                <div class="flow-step">Problem</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">Discussion</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">Solution</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">Sharing</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" style="border-color: var(--orange);">Bug</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step" style="background: rgba(48, 209, 88, 0.3); border-color: var(--green);">Fix</div>
+            </div>
+            
+            <p class="body-text" style="margin-top: 48px; max-width: 700px;">
+                This wasn't a planned feature. It emerged from a real user frustration, 
+                evolved through collaboration, and improved the system for everyone.
+            </p>
+        </div>
+
+        <!-- Slide 22: Velocity -->
+        <div class="slide">
+            <div class="section-label">Velocity</div>
+            <h2 class="medium-headline">By the Numbers</h2>
+            
+            <div class="stat-grid">
+                <div class="stat">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Mode created</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Bugs fixed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">User prompts</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Meeting multitasked</div>
+                </div>
+            </div>
+            
+            <div class="highlight-box" style="text-align: center;">
+                <p class="body-text" style="color: #fff; font-size: clamp(16px, 2.5vw, 20px);">
+                    From frustration to shared solution in a single conversation,<br>
+                    with autonomous bug fixing during a meeting.
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 23: CTA -->
+        <div class="slide centered">
+            <div class="section-label">Try It</div>
+            <h1 class="headline">Use Recipe Runner Mode</h1>
+            
+            <div class="code-block" style="margin-top: 40px; text-align: left; display: inline-block;"><span class="c-gray"># Use the bundled mode</span>
+<span class="c-yellow">$</span> amplifier --mode @recipes:recipe-runner
+
+<span class="c-gray"># Or create your own restricted modes</span>
+<span class="c-yellow">$</span> cat .amplifier/modes/my-mode.md</div>
+            
+            <p class="body-text" style="margin-top: 40px;">
+                Available in the <span class="emphasis">recipes bundle</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Navigation UI -->
+    <div class="nav-dots"></div>
+    <div class="slide-counter"></div>
+    
+    <!-- Click zones for navigation -->
+    <div class="click-prev"></div>
+    <div class="click-next"></div>
+
+    <script>
+    (function() {
+        // Get all slides
+        var slides = document.querySelectorAll('.slide');
+        var totalSlides = slides.length;
+        var currentSlide = 0;
+        
+        // Get navigation elements
+        var navDotsContainer = document.querySelector('.nav-dots');
+        var slideCounter = document.querySelector('.slide-counter');
+        var clickPrev = document.querySelector('.click-prev');
+        var clickNext = document.querySelector('.click-next');
+        
+        // Create navigation dots
+        for (var i = 0; i < totalSlides; i++) {
+            var dot = document.createElement('button');
+            dot.className = 'nav-dot';
+            dot.setAttribute('data-slide', i);
+            dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+            navDotsContainer.appendChild(dot);
+        }
+        
+        var navDots = document.querySelectorAll('.nav-dot');
+        
+        // Show a specific slide
+        function showSlide(index) {
+            // Clamp index
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            
+            currentSlide = index;
+            
+            // Update slides
+            for (var i = 0; i < slides.length; i++) {
+                if (i === currentSlide) {
+                    slides[i].classList.add('active');
+                } else {
+                    slides[i].classList.remove('active');
+                }
+            }
+            
+            // Update dots
+            for (var i = 0; i < navDots.length; i++) {
+                if (i === currentSlide) {
+                    navDots[i].classList.add('active');
+                } else {
+                    navDots[i].classList.remove('active');
+                }
+            }
+            
+            // Update counter
+            slideCounter.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+        }
+        
+        // Navigation functions
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+        
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+        
+        // Dot click handlers
+        for (var i = 0; i < navDots.length; i++) {
+            navDots[i].addEventListener('click', function(e) {
+                var slideIndex = parseInt(this.getAttribute('data-slide'), 10);
+                showSlide(slideIndex);
+            });
+        }
+        
+        // Click zone handlers
+        clickPrev.addEventListener('click', function(e) {
+            e.preventDefault();
+            prevSlide();
+        });
+        
+        clickNext.addEventListener('click', function(e) {
+            e.preventDefault();
+            nextSlide();
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                showSlide(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                showSlide(totalSlides - 1);
+            }
+        });
+        
+        // Touch/swipe support
+        var touchStartX = 0;
+        var touchStartY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function(e) {
+            var touchEndX = e.changedTouches[0].clientX;
+            var touchEndY = e.changedTouches[0].clientY;
+            var diffX = touchStartX - touchEndX;
+            var diffY = touchStartY - touchEndY;
+            
+            // Only trigger if horizontal swipe is greater than vertical
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }, { passive: true });
+        
+        // Initialize
+        showSlide(0);
+    })();
+    </script>
+</body>
+</html>
