@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Intelligence Enhanced - Deep Dive</title>
+    <style>
+        :root {
+            --accent: #9B7BFF;
+            --accent-light: #B794FF;
+            --accent-glow: rgba(155, 123, 255, 0.3);
+            --bg: #0a0a0a;
+            --card-bg: rgba(255,255,255,0.05);
+            --card-border: rgba(255,255,255,0.1);
+            --text: #fff;
+            --text-dim: rgba(255,255,255,0.6);
+            --success: #30D158;
+            --warning: #FF9F0A;
+            --cyan: #00CED1;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        .deck { height: 100vh; height: 100dvh; overflow: hidden; }
+        
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(24px, 5vw, 80px);
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .slide.active { display: flex; }
+        
+        .section-label {
+            font-size: clamp(11px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        
+        .headline {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        
+        .subhead {
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: 400;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        
+        .body-text {
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.6;
+            color: var(--text-dim);
+        }
+        
+        .title-slide { text-align: center; align-items: center; }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: #fff;
+            font-size: clamp(12px, 1.5vw, 16px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 12px 32px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+        
+        .card-title {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+        }
+        
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+            gap: clamp(12px, 2vw, 20px);
+        }
+        
+        .bullet-list { list-style: none; padding-left: 0; }
+        
+        .bullet-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+        
+        .quote-block {
+            background: linear-gradient(135deg, rgba(155, 123, 255, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 16px 16px 0;
+            padding: clamp(20px, 4vw, 32px);
+            margin: 24px 0;
+        }
+        
+        .quote-text {
+            font-size: clamp(18px, 3vw, 28px);
+            font-style: italic;
+            line-height: 1.4;
+            color: var(--text);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(155, 123, 255, 0.15) 0%, rgba(183, 148, 255, 0.05) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+            margin-top: 24px;
+        }
+        
+        .agent-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .agent-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .agent-name {
+            font-weight: 600;
+            font-size: clamp(14px, 2vw, 16px);
+            margin-bottom: 4px;
+            color: var(--accent);
+        }
+        
+        .agent-desc {
+            font-size: clamp(11px, 1.5vw, 13px);
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .comparison-table th {
+            font-size: clamp(12px, 1.5vw, 14px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+        }
+        
+        .comparison-table td {
+            font-size: clamp(14px, 2vw, 16px);
+            color: var(--text-dim);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .old-way {
+            color: var(--warning);
+            opacity: 0.7;
+        }
+        
+        .new-way {
+            color: var(--success);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 32px 0;
+        }
+        
+        .flow-step {
+            background: var(--card-bg);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px 24px;
+            text-align: center;
+            min-width: 140px;
+        }
+        
+        .flow-step-title {
+            font-weight: 600;
+            font-size: clamp(14px, 2vw, 16px);
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        
+        .flow-step-desc {
+            font-size: clamp(11px, 1.5vw, 13px);
+            color: var(--text-dim);
+        }
+        
+        .flow-arrow {
+            font-size: 24px;
+            color: var(--accent);
+        }
+        
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'SF Mono', monospace;
+            z-index: 100;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 32px;
+            font-size: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover { color: var(--accent); }
+        
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 15%;
+            cursor: pointer;
+            z-index: 50;
+        }
+        
+        .click-zone.left { left: 0; }
+        .click-zone.right { right: 0; }
+    </style>
+</head>
+<body>
+    <a href="00-master-overview.html" class="back-link">← Back to Overview</a>
+    
+    <div class="deck">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide active" data-slide="1">
+            <div class="badge">Ecosystem Tooling</div>
+            <h1 class="headline">Design Intelligence<br>Enhanced</h1>
+            <p class="subhead" style="max-width: 700px;">
+                AI-augmented design research that asks <span style="color: var(--accent);">"what is the user's brain doing?"</span> instead of "what category is this?"
+            </p>
+        </div>
+        
+        <!-- Slide 2: The Paradigm Shift -->
+        <div class="slide" data-slide="2">
+            <div class="section-label">The Innovation</div>
+            <h2 class="headline">Research by Purpose,<br>Not Category</h2>
+            <table class="comparison-table">
+                <tr>
+                    <th>Old Way (Category-Matching)</th>
+                    <th>New Way (Purpose-Driven)</th>
+                </tr>
+                <tr>
+                    <td class="old-way">"Design a healthcare dashboard"<br>→ Research healthcare dashboards</td>
+                    <td class="new-way">"Design a healthcare dashboard"<br>→ Research "rapid assessment" + "anomaly detection"</td>
+                </tr>
+                <tr>
+                    <td class="old-way">Output: Competent remix of existing UIs</td>
+                    <td class="new-way">Output: Fresh work grounded in proven patterns</td>
+                </tr>
+                <tr>
+                    <td class="old-way">Sources: 100% same-category examples</td>
+                    <td class="new-way">Sources: 20% domain + 50% purpose-driven + 30% divergent</td>
+                </tr>
+            </table>
+            <div class="quote-block" style="margin-top: 32px;">
+                <div class="quote-text">"Better patterns from unexpected sources—because a trading platform and a hospital monitor solve the same cognitive problem differently."</div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: The Methodology -->
+        <div class="slide" data-slide="3">
+            <div class="section-label">Methodology</div>
+            <h2 class="headline" style="margin-bottom: 24px;">Cognitive Task Mapping</h2>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-step-title">Decompose</div>
+                    <div class="flow-step-desc">Cognitive tasks</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-title">Map</div>
+                    <div class="flow-step-desc">Analogous domains</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-title">Research</div>
+                    <div class="flow-step-desc">Multi-vector</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-step-title">Extract</div>
+                    <div class="flow-step-desc">Level 3-4 patterns</div>
+                </div>
+            </div>
+            <div class="grid-2" style="margin-top: 24px;">
+                <div class="card">
+                    <div class="card-title">Cognitive Tasks</div>
+                    <ul class="bullet-list">
+                        <li><strong>Rapid Gestalt Assessment</strong> — System health at a glance</li>
+                        <li><strong>Anomaly Detection</strong> — What requires attention?</li>
+                        <li><strong>Progressive Disclosure</strong> — Overview to detail</li>
+                        <li><strong>Decision Support</strong> — Making choices with confidence</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">Analogous Domains</div>
+                    <ul class="bullet-list">
+                        <li>Medical monitors → Gestalt assessment</li>
+                        <li>Trading platforms → Anomaly detection</li>
+                        <li>Gaming HUDs → Critical info hierarchy</li>
+                        <li>Security ops → Decision under pressure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: The Agents -->
+        <div class="slide" data-slide="4">
+            <div class="section-label">Architecture</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Specialized Agents</h2>
+            <div class="grid-4">
+                <div class="agent-card">
+                    <div class="agent-icon">🎨</div>
+                    <div class="agent-name">art-director</div>
+                    <div class="agent-desc">Aesthetic direction & visual strategy</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">📐</div>
+                    <div class="agent-name">layout-architect</div>
+                    <div class="agent-desc">Spatial composition & structure</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">🔍</div>
+                    <div class="agent-name">research-analyst</div>
+                    <div class="agent-desc">Cross-domain pattern extraction</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">🧩</div>
+                    <div class="agent-name">component-designer</div>
+                    <div class="agent-desc">UI element refinement</div>
+                </div>
+            </div>
+            <div class="grid-4" style="margin-top: 16px;">
+                <div class="agent-card">
+                    <div class="agent-icon">🎬</div>
+                    <div class="agent-name">animation-choreographer</div>
+                    <div class="agent-desc">Motion & transitions</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">📱</div>
+                    <div class="agent-name">responsive-strategist</div>
+                    <div class="agent-desc">Multi-device adaptation</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">✍️</div>
+                    <div class="agent-name">voice-strategist</div>
+                    <div class="agent-desc">UX writing & microcopy</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">🏗️</div>
+                    <div class="agent-name">design-system-architect</div>
+                    <div class="agent-desc">Tokens & foundations</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: Research Pipeline -->
+        <div class="slide" data-slide="5">
+            <div class="section-label">Capabilities</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Research Pipeline</h2>
+            <div class="grid-3">
+                <div class="card" style="border-color: var(--accent);">
+                    <div class="card-title">Automated Scraping</div>
+                    <div class="body-text" style="margin-bottom: 16px;">Weekly automated collection from award-winning design sources.</div>
+                    <ul class="bullet-list">
+                        <li>Awwwards</li>
+                        <li>Siteinspire</li>
+                        <li>The FWA</li>
+                    </ul>
+                </div>
+                <div class="card" style="border-color: var(--cyan);">
+                    <div class="card-title" style="color: var(--cyan);">Vision Analysis</div>
+                    <div class="body-text" style="margin-bottom: 16px;">AI-powered screenshot analysis extracting design patterns.</div>
+                    <ul class="bullet-list">
+                        <li>Color palettes</li>
+                        <li>Layout structures</li>
+                        <li>Typography patterns</li>
+                    </ul>
+                </div>
+                <div class="card" style="border-color: var(--success);">
+                    <div class="card-title" style="color: var(--success);">Trend Synthesis</div>
+                    <div class="body-text" style="margin-bottom: 16px;">Actionable insights with reasoning about why patterns work.</div>
+                    <ul class="bullet-list">
+                        <li>Monthly summaries</li>
+                        <li>30-day archive index</li>
+                        <li>Conversational queries</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: Generation Capabilities -->
+        <div class="slide" data-slide="6">
+            <div class="section-label">Output</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Design Protocol Artifacts</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Token Generation</div>
+                    <div class="body-text" style="margin-bottom: 16px;">Complete design token systems from discovery briefs.</div>
+                    <ul class="bullet-list">
+                        <li>Color systems (primary, secondary, semantic)</li>
+                        <li>Typography scales & families</li>
+                        <li>Spacing & radius systems</li>
+                        <li>Motion timing & easing</li>
+                    </ul>
+                    <div style="margin-top: 16px; font-size: 13px; color: var(--text-dim);">
+                        <strong>Exports:</strong> CSS, Tailwind, SCSS, Flat JSON
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Component Specs</div>
+                    <div class="body-text" style="margin-bottom: 16px;">Implementation-ready component specifications.</div>
+                    <ul class="bullet-list">
+                        <li>Variants & sizes</li>
+                        <li>States & interactions</li>
+                        <li>Accessibility requirements</li>
+                        <li>Token references (never hardcoded)</li>
+                    </ul>
+                    <div style="margin-top: 16px; font-size: 13px; color: var(--text-dim);">
+                        <strong>Format:</strong> Design Protocol JSON Schema
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 7: Why It Matters -->
+        <div class="slide" data-slide="7">
+            <div class="section-label">Impact</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Why It Matters</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="quote-block">
+                        <div class="quote-text">"Design intelligence produces breakthrough creative work by researching PURPOSE across domains, not just matching categories."</div>
+                    </div>
+                    <div class="body-text" style="margin-top: 24px;">
+                        This is the innovation that sets it apart. When you ask "what is the user's brain doing?" instead of "what category is this project?", you discover patterns from unexpected places that feel fresh while being grounded in proven solutions.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">The Difference</div>
+                    <ul class="bullet-list">
+                        <li><strong>Category-matching:</strong> "Healthcare dashboard? Look at healthcare dashboards."</li>
+                        <li><strong>Purpose-driven:</strong> "Healthcare dashboard needs rapid assessment? Look at trading platforms, medical monitors, gaming HUDs."</li>
+                        <li><strong>Result:</strong> Designs that feel innovative while solving real cognitive problems.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 8: What's Next -->
+        <div class="slide" data-slide="8">
+            <div class="section-label">Looking Ahead</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Next Steps</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Refinements</div>
+                    <ul class="bullet-list">
+                        <li>Expand cognitive task catalog</li>
+                        <li>Improve pattern abstraction depth</li>
+                        <li>Better cross-domain mapping</li>
+                        <li>Integration with discovery bundle</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">Integration</div>
+                    <ul class="bullet-list">
+                        <li>Connect to withamplifier.com for showcases</li>
+                        <li>Link with EXO Protocol for attribution</li>
+                        <li>Feed into Stories bundle for presentations</li>
+                        <li>Export packages for coding agents</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box" style="text-align: center; margin-top: 32px;">
+                <div style="font-size: clamp(18px, 3vw, 24px); color: var(--text); font-weight: 600;">
+                    Research the problem, not the category.
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="slide-counter" id="slideCounter">1 / 8</div>
+    <div class="click-zone left" onclick="prevSlide()"></div>
+    <div class="click-zone right" onclick="nextSlide()"></div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 8;
+        
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            currentSlide = n;
+            
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelector(`[data-slide="${n}"]`).classList.add('active');
+            
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i + 1 === n);
+            });
+            
+            document.getElementById('slideCounter').textContent = `${n} / ${totalSlides}`;
+        }
+        
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+        
+        const navDots = document.getElementById('navDots');
+        for (let i = 1; i <= totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+            dot.onclick = () => showSlide(i);
+            navDots.appendChild(dot);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+        
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+        }, { passive: true });
+    </script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>withamplifier.com - Deep Dive</title>
+    <style>
+        :root {
+            --accent: #0078D4;
+            --accent-light: #00A4EF;
+            --accent-glow: rgba(0, 120, 212, 0.3);
+            --bg: #0a0a0a;
+            --card-bg: rgba(255,255,255,0.05);
+            --card-border: rgba(255,255,255,0.1);
+            --text: #fff;
+            --text-dim: rgba(255,255,255,0.6);
+            --success: #30D158;
+            --warning: #FF9F0A;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        .deck { height: 100vh; height: 100dvh; overflow: hidden; }
+        
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(24px, 5vw, 80px);
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .slide.active { display: flex; }
+        
+        .section-label {
+            font-size: clamp(11px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        
+        .headline {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        
+        .subhead {
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: 400;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        
+        .body-text {
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.6;
+            color: var(--text-dim);
+        }
+        
+        .title-slide { text-align: center; align-items: center; }
+        
+        .site-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: #fff;
+            font-size: clamp(12px, 1.5vw, 16px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 12px 32px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+        
+        .card-title {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+        }
+        
+        .bullet-list { list-style: none; padding-left: 0; }
+        
+        .bullet-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+        
+        .quote-block {
+            background: linear-gradient(135deg, rgba(0, 120, 212, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 16px 16px 0;
+            padding: clamp(20px, 4vw, 32px);
+            margin: 24px 0;
+        }
+        
+        .quote-text {
+            font-size: clamp(18px, 3vw, 28px);
+            font-style: italic;
+            line-height: 1.4;
+            color: var(--text);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 120, 212, 0.15) 0%, rgba(0, 164, 239, 0.05) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+            margin-top: 24px;
+        }
+        
+        .code-block {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: clamp(12px, 1.5vw, 14px);
+            overflow-x: auto;
+            color: var(--success);
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent-light));
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 32px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        
+        .timeline-date {
+            font-size: clamp(11px, 1.5vw, 13px);
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-title {
+            font-size: clamp(16px, 2.5vw, 22px);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-desc {
+            font-size: clamp(14px, 2vw, 16px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .collaborator {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+        }
+        
+        .collaborator-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .collaborator-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .collaborator-role {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'SF Mono', monospace;
+            z-index: 100;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 32px;
+            font-size: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover { color: var(--accent); }
+        
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 15%;
+            cursor: pointer;
+            z-index: 50;
+        }
+        
+        .click-zone.left { left: 0; }
+        .click-zone.right { right: 0; }
+    </style>
+</head>
+<body>
+    <a href="00-master-overview.html" class="back-link">← Back to Overview</a>
+    
+    <div class="deck">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide active" data-slide="1">
+            <div class="site-badge">Strategic Communication</div>
+            <h1 class="headline">withamplifier.com</h1>
+            <p class="subhead" style="max-width: 700px;">
+                Not just a website—<span style="color: var(--accent);">the communication layer</span> for everything we do with Amplifier.
+            </p>
+        </div>
+        
+        <!-- Slide 2: The Strategic Purpose -->
+        <div class="slide" data-slide="2">
+            <div class="section-label">Why It Matters</div>
+            <h2 class="headline">The Communication Layer</h2>
+            <div class="grid-2" style="margin-top: 24px;">
+                <div>
+                    <div class="quote-block">
+                        <div class="quote-text">"Every artifact, every story, every presentation we create needs a home. withamplifier.com is that home."</div>
+                    </div>
+                    <div class="body-text" style="margin-top: 24px;">
+                        As Amplifier grows, so does the need to communicate what it does, what's being built with it, and why it matters. This site becomes the central touchpoint for all of that communication—internally and externally.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Strategic Functions</div>
+                    <ul class="bullet-list">
+                        <li><strong>Showcase:</strong> Presentations, stories, and work created with Amplifier</li>
+                        <li><strong>Coordinate:</strong> Team visibility into what's being built</li>
+                        <li><strong>Automate:</strong> Pipeline from sessions to published stories</li>
+                        <li><strong>Evangelize:</strong> External-facing proof of what's possible</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: The Vision -->
+        <div class="slide" data-slide="3">
+            <div class="section-label">The Vision</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Session → Story → Site</h2>
+            <div class="grid-3">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                    <div class="card-title" style="color: var(--text);">Sessions</div>
+                    <div class="body-text">Work happens in Amplifier sessions—conversations, code, decisions, outcomes.</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📖</div>
+                    <div class="card-title" style="color: var(--text);">Stories</div>
+                    <div class="body-text">Stories bundle transforms sessions into compelling narratives and presentations.</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🌐</div>
+                    <div class="card-title" style="color: var(--text);">Site</div>
+                    <div class="body-text">withamplifier.com publishes and hosts stories for team and public consumption.</div>
+                </div>
+            </div>
+            <div class="highlight-box" style="text-align: center; margin-top: 32px;">
+                <div style="font-size: clamp(16px, 2.5vw, 22px); color: var(--text);">
+                    <strong>The Goal:</strong> Automated content pipeline from work to publication
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Technical Work This Week -->
+        <div class="slide" data-slide="4">
+            <div class="section-label">This Week</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Technical Progress</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">Animation System</div>
+                    <div class="timeline-title">Typewriter Scroll Sync</div>
+                    <div class="timeline-desc">Implemented fade-in per line approach (Option A) for the typewriter animation, ensuring smooth scroll synchronization as content reveals.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Visual Polish</div>
+                    <div class="timeline-title">Dark Theme Particle Fix</div>
+                    <div class="timeline-desc">Fixed depth-obsidian theme opacity issue that was preventing background particles from being visible. Subtle but important atmospheric detail.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">Automation</div>
+                    <div class="timeline-title">GitHub Workflow Created</div>
+                    <div class="timeline-desc">Built <code style="color: var(--success);">sync-presentations.yml</code> workflow to automatically sync presentation decks from the stories repository.</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">SEO & Social</div>
+                    <div class="timeline-title">Preview Optimization</div>
+                    <div class="timeline-desc">Optimized social media previews—thumbnails, favicons, meta tags for proper unfurling on Teams, Slack, Twitter.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: The Automation Pipeline -->
+        <div class="slide" data-slide="5">
+            <div class="section-label">Infrastructure</div>
+            <h2 class="headline" style="margin-bottom: 24px;">Sync Pipeline</h2>
+            <div class="code-block" style="margin-bottom: 24px;">
+# .github/workflows/sync-presentations.yml
+
+name: Sync Presentations from Stories
+on:
+  repository_dispatch:
+    types: [new-presentation]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch from amplifier-stories
+        run: |
+          # Pull latest presentations
+          # Copy to site/presentations/
+          # Commit and push
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Trigger Sources</div>
+                    <ul class="bullet-list">
+                        <li>Repository dispatch (real-time)</li>
+                        <li>Scheduled sync (every 6 hours)</li>
+                        <li>Manual workflow dispatch</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">What Gets Synced</div>
+                    <ul class="bullet-list">
+                        <li>HTML presentation decks</li>
+                        <li>Supporting assets (images, CSS)</li>
+                        <li>Index/manifest updates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: Team Coordination -->
+        <div class="slide" data-slide="6">
+            <div class="section-label">Collaboration</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Team Coordination</h2>
+            <p class="subhead" style="margin-bottom: 32px;">This week involved significant coordination with team members on priorities and direction.</p>
+            <div class="grid-3">
+                <div class="collaborator">
+                    <div class="collaborator-avatar">B</div>
+                    <div>
+                        <div class="collaborator-name">Brian</div>
+                        <div class="collaborator-role">Content strategy & automation planning</div>
+                    </div>
+                </div>
+                <div class="collaborator">
+                    <div class="collaborator-avatar">M</div>
+                    <div>
+                        <div class="collaborator-name">Mollie</div>
+                        <div class="collaborator-role">Site priorities & feature alignment</div>
+                    </div>
+                </div>
+                <div class="collaborator">
+                    <div class="collaborator-avatar">S</div>
+                    <div>
+                        <div class="collaborator-name">Samuel</div>
+                        <div class="collaborator-role">Technical coordination</div>
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 32px;">
+                <div class="card-title" style="color: var(--warning); margin-bottom: 12px;">Team Feedback Analyzed</div>
+                <div class="body-text" style="color: var(--text);">
+                    Reviewed internal team feedback on Amplifier CLI behaviors this week. This informs both the site experience and the underlying tools we're building.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 7: By The Numbers -->
+        <div class="slide" data-slide="7">
+            <div class="section-label">This Week</div>
+            <h2 class="headline" style="margin-bottom: 32px;">By The Numbers</h2>
+            <div class="grid-3">
+                <div class="card" style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: clamp(48px, 10vw, 72px); font-weight: 700; color: var(--accent); line-height: 1;">4</div>
+                    <div style="font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Sessions</div>
+                </div>
+                <div class="card" style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: clamp(48px, 10vw, 72px); font-weight: 700; color: var(--accent); line-height: 1;">94+</div>
+                    <div style="font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Conversation Turns</div>
+                </div>
+                <div class="card" style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: clamp(48px, 10vw, 72px); font-weight: 700; color: var(--accent); line-height: 1;">1</div>
+                    <div style="font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">GitHub Workflow</div>
+                </div>
+            </div>
+            <div class="quote-block" style="margin-top: 32px;">
+                <div class="quote-text" style="font-size: clamp(16px, 2.5vw, 24px);">"94 turns coordinating vision with execution—that's what strategic work looks like with AI."</div>
+            </div>
+        </div>
+        
+        <!-- Slide 8: What's Next -->
+        <div class="slide" data-slide="8">
+            <div class="section-label">Looking Ahead</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Next Steps</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Immediate</div>
+                    <ul class="bullet-list">
+                        <li>Launch preparation</li>
+                        <li>Content seeding—initial presentations</li>
+                        <li>Team review and feedback cycle</li>
+                        <li>Performance optimization</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">Future Vision</div>
+                    <ul class="bullet-list">
+                        <li>Automated story generation from sessions</li>
+                        <li>Team activity feeds</li>
+                        <li>Public showcase of Amplifier capabilities</li>
+                        <li>Integration with EXO Protocol concepts</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box" style="text-align: center; margin-top: 32px;">
+                <div style="font-size: clamp(18px, 3vw, 24px); color: var(--text); font-weight: 600;">
+                    The site is the surface. The pipeline is the power.
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="slide-counter" id="slideCounter">1 / 8</div>
+    <div class="click-zone left" onclick="prevSlide()"></div>
+    <div class="click-zone right" onclick="nextSlide()"></div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 8;
+        
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            currentSlide = n;
+            
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelector(`[data-slide="${n}"]`).classList.add('active');
+            
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i + 1 === n);
+            });
+            
+            document.getElementById('slideCounter').textContent = `${n} / ${totalSlides}`;
+        }
+        
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+        
+        const navDots = document.getElementById('navDots');
+        for (let i = 1; i <= totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+            dot.onclick = () => showSlide(i);
+            navDots.appendChild(dot);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+        
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+        }, { passive: true });
+    </script>
+</body>
+</html>

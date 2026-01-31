@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amplifier Forge - Deep Dive</title>
+    <style>
+        :root {
+            --accent: #FF6B6B;
+            --accent-light: #FF8E8E;
+            --accent-glow: rgba(255, 107, 107, 0.3);
+            --bg: #0a0a0a;
+            --card-bg: rgba(255,255,255,0.05);
+            --card-border: rgba(255,255,255,0.1);
+            --text: #fff;
+            --text-dim: rgba(255,255,255,0.6);
+            --success: #30D158;
+            --warning: #FF9F0A;
+            --blue: #0078D4;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        .deck { height: 100vh; height: 100dvh; overflow: hidden; }
+        
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(24px, 5vw, 80px);
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .slide.active { display: flex; }
+        
+        .section-label {
+            font-size: clamp(11px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        
+        .headline {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        
+        .subhead {
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: 400;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        
+        .body-text {
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.6;
+            color: var(--text-dim);
+        }
+        
+        .title-slide { text-align: center; align-items: center; }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: #fff;
+            font-size: clamp(12px, 1.5vw, 16px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 12px 32px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+        
+        .card-title {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+        }
+        
+        .bullet-list { list-style: none; padding-left: 0; }
+        
+        .bullet-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+        
+        .quote-block {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 16px 16px 0;
+            padding: clamp(20px, 4vw, 32px);
+            margin: 24px 0;
+        }
+        
+        .quote-text {
+            font-size: clamp(18px, 3vw, 28px);
+            font-style: italic;
+            line-height: 1.4;
+            color: var(--text);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 142, 142, 0.05) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+            margin-top: 24px;
+        }
+        
+        .track-card {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(24px, 4vw, 40px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .track-card.restore {
+            border-color: var(--accent);
+        }
+        
+        .track-card.evolve {
+            border-color: var(--warning);
+        }
+        
+        .track-number {
+            position: absolute;
+            top: -20px;
+            right: 20px;
+            font-size: clamp(80px, 15vw, 120px);
+            font-weight: 800;
+            opacity: 0.1;
+            line-height: 1;
+        }
+        
+        .track-card.restore .track-number { color: var(--accent); }
+        .track-card.evolve .track-number { color: var(--warning); }
+        
+        .track-label {
+            font-size: clamp(11px, 1.5vw, 13px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        
+        .track-card.restore .track-label { color: var(--accent); }
+        .track-card.evolve .track-label { color: var(--warning); }
+        
+        .track-title {
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .machine-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: clamp(11px, 1.5vw, 13px);
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .metric-row {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 32px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: clamp(48px, 10vw, 72px);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .metric-label {
+            font-size: clamp(12px, 1.5vw, 14px);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'SF Mono', monospace;
+            z-index: 100;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 32px;
+            font-size: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover { color: var(--accent); }
+        
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 15%;
+            cursor: pointer;
+            z-index: 50;
+        }
+        
+        .click-zone.left { left: 0; }
+        .click-zone.right { right: 0; }
+    </style>
+</head>
+<body>
+    <a href="00-master-overview.html" class="back-link">← Back to Overview</a>
+    
+    <div class="deck">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide active" data-slide="1">
+            <div class="badge">Exploration</div>
+            <h1 class="headline">Amplifier Forge</h1>
+            <p class="subhead" style="max-width: 700px;">
+                Two parallel tracks: <span style="color: var(--accent);">restoration</span> of what works and <span style="color: var(--warning);">evolution</span> toward what's next.
+            </p>
+        </div>
+        
+        <!-- Slide 2: The Two Tracks -->
+        <div class="slide" data-slide="2">
+            <div class="section-label">Approach</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Two Tracks</h2>
+            <div class="grid-2">
+                <div class="track-card restore">
+                    <div class="track-number">1</div>
+                    <div class="track-label">Track One</div>
+                    <div class="track-title">Restoration</div>
+                    <div class="body-text" style="margin-bottom: 16px;">
+                        Got Forge working again using learnings from the community. Continued investment in the current form factor.
+                    </div>
+                    <div>
+                        <span class="machine-badge">Mac</span>
+                    </div>
+                </div>
+                <div class="track-card evolve">
+                    <div class="track-number">2</div>
+                    <div class="track-label">Track Two</div>
+                    <div class="track-title">Evolution</div>
+                    <div class="body-text" style="margin-bottom: 16px;">
+                        Building context for what will supersede Forge. Exploratory work on new interaction paradigms.
+                    </div>
+                    <div>
+                        <span class="machine-badge">PiDrive</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: Track 1 - Restoration -->
+        <div class="slide" data-slide="3">
+            <div class="section-label" style="color: var(--accent);">Track 1</div>
+            <h2 class="headline">Forge Restored</h2>
+            <div class="grid-2" style="margin-top: 24px;">
+                <div>
+                    <div class="body-text" style="margin-bottom: 24px;">
+                        The existing Forge had fallen into a broken state. This week's work focused on getting it operational again, incorporating patterns and learnings from others who have been working with similar tools.
+                    </div>
+                    <div class="card" style="border-color: var(--accent);">
+                        <div class="card-title">What Was Done</div>
+                        <ul class="bullet-list">
+                            <li>Restored to working state</li>
+                            <li>Incorporated community patterns</li>
+                            <li>Applied learnings from similar projects</li>
+                            <li>Continued form exploration</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--text);">Why This Matters</div>
+                    <div class="body-text" style="margin-bottom: 16px;">
+                        Forge represents a particular approach to AI-augmented development. Having it operational allows us to:
+                    </div>
+                    <ul class="bullet-list">
+                        <li>Continue exploring its form factor</li>
+                        <li>Compare with Amplifier's approach</li>
+                        <li>Identify what works and what doesn't</li>
+                        <li>Inform the evolution track</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Track 2 - Evolution -->
+        <div class="slide" data-slide="4">
+            <div class="section-label" style="color: var(--warning);">Track 2</div>
+            <h2 class="headline">What Comes Next</h2>
+            <div class="grid-2" style="margin-top: 24px;">
+                <div>
+                    <div class="quote-block" style="border-color: var(--warning); background: linear-gradient(135deg, rgba(255, 159, 10, 0.1) 0%, transparent 100%);">
+                        <div class="quote-text">"Building context for what will supersede Forge—not replacing it, but evolving beyond it."</div>
+                    </div>
+                    <div class="body-text" style="margin-top: 24px;">
+                        The PiDrive sessions this week were exploratory—building the conceptual foundation for new interaction paradigms. This isn't about replacing Forge immediately, but understanding where it should go.
+                    </div>
+                </div>
+                <div class="card" style="border-color: var(--warning);">
+                    <div class="card-title" style="color: var(--warning);">Exploration Areas</div>
+                    <ul class="bullet-list">
+                        <li><strong>New interaction models</strong> — Beyond chat and code</li>
+                        <li><strong>Context architecture</strong> — How knowledge flows</li>
+                        <li><strong>Multi-modal integration</strong> — Voice, vision, text</li>
+                        <li><strong>Amplifier alignment</strong> — How this fits the ecosystem</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: Why Forge Matters to Amplifier -->
+        <div class="slide" data-slide="5">
+            <div class="section-label">Strategic Context</div>
+            <h2 class="headline" style="margin-bottom: 24px;">Why It Matters</h2>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title" style="color: var(--blue);">Different Form Factor</div>
+                    <div class="body-text">
+                        Forge represents a different approach to AI-augmented work than the CLI. Understanding both helps us see the full design space.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--success);">Learning Laboratory</div>
+                    <div class="body-text">
+                        Each interaction paradigm teaches us something. Forge's approach informs Amplifier's evolution.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--warning);">Future Direction</div>
+                    <div class="body-text">
+                        The evolution track isn't just about Forge—it's about where AI-augmented tools are heading overall.
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 32px;">
+                <div class="card-title" style="margin-bottom: 12px; color: var(--text);">The Question We're Exploring</div>
+                <div class="body-text" style="color: var(--text); font-size: clamp(16px, 2.5vw, 22px);">
+                    "What does the next generation of AI-augmented development look like—and how does Amplifier get there?"
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: By The Numbers -->
+        <div class="slide" data-slide="6">
+            <div class="section-label">This Week</div>
+            <h2 class="headline" style="margin-bottom: 24px;">By The Numbers</h2>
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Sessions</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">257</div>
+                    <div class="metric-label">Conversation Turns</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">2</div>
+                    <div class="metric-label">Machines</div>
+                </div>
+            </div>
+            <div class="grid-2" style="margin-top: 32px;">
+                <div class="card" style="border-color: var(--accent);">
+                    <div class="card-title">Mac Sessions</div>
+                    <div class="body-text">
+                        Restoration work—getting Forge operational, applying community learnings, exploring the existing form factor.
+                    </div>
+                </div>
+                <div class="card" style="border-color: var(--warning);">
+                    <div class="card-title" style="color: var(--warning);">PiDrive Sessions</div>
+                    <div class="body-text">
+                        Evolution work—building context, exploring new paradigms, conceptual foundation for what comes next.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 7: What's Next -->
+        <div class="slide" data-slide="7">
+            <div class="section-label">Looking Ahead</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Next Steps</h2>
+            <div class="grid-2">
+                <div class="card" style="border-color: var(--accent);">
+                    <div class="card-title">Track 1: Restoration</div>
+                    <ul class="bullet-list">
+                        <li>Continue stabilization</li>
+                        <li>Document what works</li>
+                        <li>Identify friction points</li>
+                        <li>Compare with Amplifier CLI</li>
+                    </ul>
+                </div>
+                <div class="card" style="border-color: var(--warning);">
+                    <div class="card-title" style="color: var(--warning);">Track 2: Evolution</div>
+                    <ul class="bullet-list">
+                        <li>Deeper exploration of new paradigms</li>
+                        <li>Prototype new interaction models</li>
+                        <li>Connect insights to Amplifier roadmap</li>
+                        <li>Share learnings with team</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="quote-block" style="margin-top: 32px;">
+                <div class="quote-text" style="font-size: clamp(16px, 2.5vw, 24px);">"Restoration lets us learn from what exists. Evolution lets us imagine what's possible."</div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="slide-counter" id="slideCounter">1 / 7</div>
+    <div class="click-zone left" onclick="prevSlide()"></div>
+    <div class="click-zone right" onclick="nextSlide()"></div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 7;
+        
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            currentSlide = n;
+            
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelector(`[data-slide="${n}"]`).classList.add('active');
+            
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i + 1 === n);
+            });
+            
+            document.getElementById('slideCounter').textContent = `${n} / ${totalSlides}`;
+        }
+        
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+        
+        const navDots = document.getElementById('navDots');
+        for (let i = 1; i <= totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+            dot.onclick = () => showSlide(i);
+            navDots.appendChild(dot);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+        
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+        }, { passive: true });
+    </script>
+</body>
+</html>

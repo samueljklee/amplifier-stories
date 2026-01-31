@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXO Protocol - Deep Dive</title>
+    <style>
+        :root {
+            --accent: #00CED1;
+            --accent-light: #40E0D0;
+            --accent-glow: rgba(0, 206, 209, 0.3);
+            --bg: #0a0a0a;
+            --card-bg: rgba(255,255,255,0.05);
+            --card-border: rgba(255,255,255,0.1);
+            --text: #fff;
+            --text-dim: rgba(255,255,255,0.6);
+            --success: #30D158;
+            --warning: #FF9F0A;
+            --purple: #9B7BFF;
+            --blue: #0078D4;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        .deck { height: 100vh; height: 100dvh; overflow: hidden; }
+        
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(24px, 5vw, 80px);
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .slide.active { display: flex; }
+        
+        .section-label {
+            font-size: clamp(11px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        
+        .headline {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        
+        .subhead {
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: 400;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        
+        .body-text {
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.6;
+            color: var(--text-dim);
+        }
+        
+        .title-slide { text-align: center; align-items: center; }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: #000;
+            font-size: clamp(12px, 1.5vw, 16px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 12px 32px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+        
+        .card-title {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+        }
+        
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: clamp(12px, 2vw, 20px);
+        }
+        
+        .bullet-list { list-style: none; padding-left: 0; }
+        
+        .bullet-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+        
+        .quote-block {
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 16px 16px 0;
+            padding: clamp(20px, 4vw, 32px);
+            margin: 24px 0;
+        }
+        
+        .quote-text {
+            font-size: clamp(18px, 3vw, 28px);
+            font-style: italic;
+            line-height: 1.4;
+            color: var(--text);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.15) 0%, rgba(64, 224, 208, 0.05) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+            margin-top: 24px;
+        }
+        
+        .type-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+        }
+        
+        .type-table th,
+        .type-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .type-table th {
+            font-size: clamp(12px, 1.5vw, 14px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+        }
+        
+        .type-table td {
+            font-size: clamp(14px, 2vw, 16px);
+            color: var(--text-dim);
+        }
+        
+        .type-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .type-label {
+            font-weight: 600;
+        }
+        
+        .type-idea { color: var(--accent); }
+        .type-knowledge { color: var(--blue); }
+        .type-expression { color: var(--purple); }
+        .type-outcome { color: var(--success); }
+        
+        .vault-visual {
+            background: linear-gradient(135deg, rgba(0, 206, 209, 0.1) 0%, rgba(64, 224, 208, 0.05) 100%);
+            border: 2px solid var(--accent);
+            border-radius: 24px;
+            padding: clamp(32px, 6vw, 48px);
+            text-align: center;
+            position: relative;
+        }
+        
+        .vault-icon {
+            font-size: clamp(48px, 10vw, 80px);
+            margin-bottom: 24px;
+        }
+        
+        .vault-title {
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .analogy-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+            text-align: center;
+        }
+        
+        .analogy-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .analogy-title {
+            font-size: clamp(16px, 2.5vw, 20px);
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        
+        .analogy-desc {
+            font-size: clamp(13px, 1.8vw, 15px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+            flex-wrap: wrap;
+            max-width: 80%;
+            justify-content: center;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'SF Mono', monospace;
+            z-index: 100;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 32px;
+            font-size: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover { color: var(--accent); }
+        
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 15%;
+            cursor: pointer;
+            z-index: 50;
+        }
+        
+        .click-zone.left { left: 0; }
+        .click-zone.right { right: 0; }
+    </style>
+</head>
+<body>
+    <a href="00-master-overview.html" class="back-link">← Back to Overview</a>
+    
+    <div class="deck">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide active" data-slide="1">
+            <div class="badge">Paradigm Shift</div>
+            <h1 class="headline">EXO Protocol</h1>
+            <p class="subhead" style="max-width: 800px;">
+                <span style="color: var(--accent);">Expressed Ownership</span>—reclaiming human expression in the age of AI.
+            </p>
+        </div>
+        
+        <!-- Slide 2: The Problem -->
+        <div class="slide" data-slide="2">
+            <div class="section-label">The Problem</div>
+            <h2 class="headline">Expression Without Ownership</h2>
+            <div class="grid-2" style="margin-top: 24px;">
+                <div>
+                    <div class="quote-block">
+                        <div class="quote-text">"We've created systems that track everything—what we click, where we go, what we write, say, and buy. But these systems now do more than monitor."</div>
+                    </div>
+                    <div class="body-text" style="margin-top: 24px;">
+                        With AI, these systems predict our behavior, summarize our actions, and construct digital memories about us. Yet these memories aren't ours. We didn't author them. We can't access them. We have no control over where they end up.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">The Core Questions</div>
+                    <ul class="bullet-list">
+                        <li>What happens when <strong>expression</strong> separates from <strong>ownership</strong>?</li>
+                        <li>What happens when <strong>access</strong> separates from <strong>authorship</strong>?</li>
+                        <li>What happens when <strong>learning</strong> separates from <strong>control</strong>?</li>
+                    </ul>
+                    <div class="highlight-box" style="margin-top: 16px; background: rgba(255, 159, 10, 0.1); border-color: var(--warning);">
+                        <div style="color: var(--warning); font-weight: 600;">EXO aims to restore balance to this equation.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: What Is EXO -->
+        <div class="slide" data-slide="3">
+            <div class="section-label">The Solution</div>
+            <h2 class="headline">What Is EXO?</h2>
+            <div class="body-text" style="max-width: 800px; margin-bottom: 32px; font-size: clamp(16px, 2.5vw, 22px);">
+                EXO is a framework for clearly <span style="color: var(--accent);">attributing</span>, <span style="color: var(--accent);">protecting</span>, and <span style="color: var(--accent);">sharing</span> what people express—whether through language, creativity, research, code, ideas, or lived experience.
+            </div>
+            <div class="grid-3">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🏗️</div>
+                    <div class="card-title" style="color: var(--text);">Underlies Systems</div>
+                    <div class="body-text">It doesn't replace the systems we use. It underlies them.</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📐</div>
+                    <div class="card-title" style="color: var(--text);">Shapes Boundaries</div>
+                    <div class="body-text">Gives shape and boundary to ideas, knowledge, expressions, and outcomes.</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🔄</div>
+                    <div class="card-title" style="color: var(--text);">Version Control</div>
+                    <div class="body-text">Think of it as version control for human input—traceable, portable, permissioned.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: The Framework -->
+        <div class="slide" data-slide="4">
+            <div class="section-label">The Framework</div>
+            <h2 class="headline" style="margin-bottom: 24px;">Four Types of Expression</h2>
+            <table class="type-table">
+                <tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Ownership</th>
+                </tr>
+                <tr>
+                    <td><span class="type-label type-idea">Idea</span></td>
+                    <td>A speculative or originating thought</td>
+                    <td><strong>Attributed to you</strong></td>
+                </tr>
+                <tr>
+                    <td><span class="type-label type-knowledge">Knowledge</span></td>
+                    <td>Structured or institutional information</td>
+                    <td>Owned/licensed by source</td>
+                </tr>
+                <tr>
+                    <td><span class="type-label type-expression">Expression</span></td>
+                    <td>A contribution in language, code, or media</td>
+                    <td>Contextually co-owned</td>
+                </tr>
+                <tr>
+                    <td><span class="type-label type-outcome">Outcome</span></td>
+                    <td>What changed in you (insight, skill, growth)</td>
+                    <td><strong>Fully yours</strong></td>
+                </tr>
+            </table>
+            <div class="highlight-box" style="margin-top: 24px;">
+                <div class="body-text" style="color: var(--text);">
+                    This framework ensures ownership, attribution, and rights are transparent—giving people clarity and control over what they generate and how it's used.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: The Vault -->
+        <div class="slide" data-slide="5">
+            <div class="section-label">Privacy by Default</div>
+            <h2 class="headline" style="margin-bottom: 32px;">The Vault</h2>
+            <div class="grid-2">
+                <div class="vault-visual">
+                    <div class="vault-icon">🔐</div>
+                    <div class="vault-title">Your Vault</div>
+                    <div class="body-text" style="color: var(--text);">
+                        A private, encrypted space for all your expressions.
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div class="card-title" style="color: var(--text);">What It Provides</div>
+                        <ul class="bullet-list">
+                            <li><strong>Zero-Knowledge Proofs</strong>—prove authorship without revealing content</li>
+                            <li><strong>Personal AI Agents</strong>—work with your vault, not monitoring you</li>
+                            <li><strong>Vault-to-Vault Sharing</strong>—controlled access, not public posting</li>
+                        </ul>
+                    </div>
+                    <div class="quote-block" style="margin: 0;">
+                        <div class="quote-text" style="font-size: clamp(16px, 2.5vw, 22px);">"You own what you express, you decide what's seen, and everything else stays private."</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: The University Analogy -->
+        <div class="slide" data-slide="6">
+            <div class="section-label">How It Works</div>
+            <h2 class="headline" style="margin-bottom: 32px;">The University Analogy</h2>
+            <div class="quote-block" style="margin-bottom: 32px;">
+                <div class="quote-text">"Think of it like a university: you can't take the curriculum with you, but you leave with what you've learned. Your thesis is yours; the lab equipment is not."</div>
+            </div>
+            <div class="grid-4">
+                <div class="analogy-card">
+                    <div class="analogy-icon">📚</div>
+                    <div class="analogy-title">Curriculum</div>
+                    <div class="analogy-desc">Knowledge stays with the institution</div>
+                </div>
+                <div class="analogy-card">
+                    <div class="analogy-icon">🧠</div>
+                    <div class="analogy-title">Learning</div>
+                    <div class="analogy-desc">Experience and insight are yours</div>
+                </div>
+                <div class="analogy-card">
+                    <div class="analogy-icon">📝</div>
+                    <div class="analogy-title">Thesis</div>
+                    <div class="analogy-desc">Your expression, contextually attributed</div>
+                </div>
+                <div class="analogy-card">
+                    <div class="analogy-icon">🔬</div>
+                    <div class="analogy-title">Lab Equipment</div>
+                    <div class="analogy-desc">Tools stay with the institution</div>
+                </div>
+            </div>
+            <div class="body-text" style="margin-top: 32px; text-align: center; max-width: 700px; margin-left: auto; margin-right: auto;">
+                EXO creates these same clear boundaries in digital systems—protecting both institutions and individuals by clarifying ownership.
+            </div>
+        </div>
+        
+        <!-- Slide 7: What EXO Enables -->
+        <div class="slide" data-slide="7">
+            <div class="section-label">Capabilities</div>
+            <h2 class="headline" style="margin-bottom: 32px;">What EXO Enables</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">For Individuals</div>
+                    <ul class="bullet-list">
+                        <li><strong>Private vaults</strong> that store raw thoughts and expressions</li>
+                        <li><strong>Consent-based sharing</strong> with conditions for access</li>
+                        <li><strong>Provenance trails</strong> across systems</li>
+                        <li><strong>Experience portability</strong> when you leave organizations</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">For Organizations</div>
+                    <ul class="bullet-list">
+                        <li><strong>Cleaner handoffs</strong> and offboarding processes</li>
+                        <li><strong>Better IP hygiene</strong> with clear attribution</li>
+                        <li><strong>Knowledge continuity</strong> across people and time</li>
+                        <li><strong>Proper credit</strong> for contributors</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 24px;">
+                <div class="card-title" style="color: var(--text); margin-bottom: 8px;">The Key Insight</div>
+                <div class="body-text" style="color: var(--text);">
+                    EXO doesn't weaken institutions—it <strong>strengthens them</strong> by clarifying boundaries. Employers offer access to tools and environments; under EXO, the knowledge shared remains protected, the experience gained becomes portable, and expressions contributed are contextually attributed.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 8: Building on Prior Work -->
+        <div class="slide" data-slide="8">
+            <div class="section-label">Context</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Building on Prior Work</h2>
+            <table class="type-table">
+                <tr>
+                    <th>Framework</th>
+                    <th>What It Offers</th>
+                    <th>How EXO Builds On It</th>
+                </tr>
+                <tr>
+                    <td><strong>Data Dignity</strong> (Lanier)</td>
+                    <td>Attribution, consent, dignity</td>
+                    <td>Adds vault logic + transaction layer</td>
+                </tr>
+                <tr>
+                    <td><strong>Solid</strong> (Berners-Lee)</td>
+                    <td>Decentralized data pods</td>
+                    <td>Adds expression-level granularity</td>
+                </tr>
+                <tr>
+                    <td><strong>SSI & DIDs</strong></td>
+                    <td>Identity ownership</td>
+                    <td>Links identity to evolving ideas</td>
+                </tr>
+                <tr>
+                    <td><strong>Web3 & Smart Contracts</strong></td>
+                    <td>Decentralized logic</td>
+                    <td>Embeds attribution + revocation rules</td>
+                </tr>
+            </table>
+            <div class="body-text" style="margin-top: 24px; text-align: center;">
+                EXO is protocol-first, tech-agnostic. Blockchain can help with audit trails and identity proofs, but it's not required.
+            </div>
+        </div>
+        
+        <!-- Slide 9: Why Amplifier -->
+        <div class="slide" data-slide="9">
+            <div class="section-label">Strategic Fit</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Why Amplifier?</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="quote-block">
+                        <div class="quote-text">"Amplifier could be the right vehicle for EXO. This is the right time to think about this paradigm shift."</div>
+                    </div>
+                    <div class="body-text" style="margin-top: 24px;">
+                        Amplifier already tracks sessions, expressions, and outcomes. It already thinks about attribution (co-authored commits). It already has a philosophy of transparency and user control.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Natural Alignment</div>
+                    <ul class="bullet-list">
+                        <li><strong>Session transcripts</strong>—expressions captured</li>
+                        <li><strong>Contribution tracking</strong>—attribution built-in</li>
+                        <li><strong>Modular architecture</strong>—EXO as a layer</li>
+                        <li><strong>Event system</strong>—audit trails exist</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 24px; text-align: center;">
+                <div style="font-size: clamp(18px, 3vw, 24px); color: var(--text); font-weight: 600;">
+                    EXO isn't just theory—it could be Amplifier's differentiator.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 10: What's Next -->
+        <div class="slide" data-slide="10">
+            <div class="section-label">Looking Ahead</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Next Steps</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">Immediate</div>
+                    <ul class="bullet-list">
+                        <li>Continue developing the specification</li>
+                        <li>Identify integration points with Amplifier</li>
+                        <li>Build proof-of-concept demonstrations</li>
+                        <li>Socialize within the team</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">Longer Term</div>
+                    <ul class="bullet-list">
+                        <li>Formal protocol specification</li>
+                        <li>Reference implementation</li>
+                        <li>Partner engagement</li>
+                        <li>Standards participation</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="quote-block" style="margin-top: 32px;">
+                <div class="quote-text" style="font-size: clamp(18px, 3vw, 26px);">"Expression → Ownership → Outcome"</div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="slide-counter" id="slideCounter">1 / 10</div>
+    <div class="click-zone left" onclick="prevSlide()"></div>
+    <div class="click-zone right" onclick="nextSlide()"></div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 10;
+        
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            currentSlide = n;
+            
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelector(`[data-slide="${n}"]`).classList.add('active');
+            
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i + 1 === n);
+            });
+            
+            document.getElementById('slideCounter').textContent = `${n} / ${totalSlides}`;
+        }
+        
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+        
+        const navDots = document.getElementById('navDots');
+        for (let i = 1; i <= totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+            dot.onclick = () => showSlide(i);
+            navDots.appendChild(dot);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+        
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+        }, { passive: true });
+    </script>
+</body>
+</html>

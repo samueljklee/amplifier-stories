@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Orchestration - Deep Dive</title>
+    <style>
+        :root {
+            --accent: #30D158;
+            --accent-light: #5EE07A;
+            --accent-glow: rgba(48, 209, 88, 0.3);
+            --bg: #0a0a0a;
+            --card-bg: rgba(255,255,255,0.05);
+            --card-border: rgba(255,255,255,0.1);
+            --text: #fff;
+            --text-dim: rgba(255,255,255,0.6);
+            --warning: #FF9F0A;
+            --purple: #9B7BFF;
+            --blue: #0078D4;
+            --cyan: #00CED1;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        .deck { height: 100vh; height: 100dvh; overflow: hidden; }
+        
+        .slide {
+            display: none;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(24px, 5vw, 80px);
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .slide.active { display: flex; }
+        
+        .section-label {
+            font-size: clamp(11px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        
+        .headline {
+            font-size: clamp(36px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        
+        .subhead {
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: 400;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        
+        .body-text {
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.6;
+            color: var(--text-dim);
+        }
+        
+        .title-slide { text-align: center; align-items: center; }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: #000;
+            font-size: clamp(12px, 1.5vw, 16px);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 12px 32px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+        }
+        
+        .card-title {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 32px);
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+        }
+        
+        .bullet-list { list-style: none; padding-left: 0; }
+        
+        .bullet-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-size: clamp(14px, 2vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+        
+        .quote-block {
+            background: linear-gradient(135deg, rgba(48, 209, 88, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 16px 16px 0;
+            padding: clamp(20px, 4vw, 32px);
+            margin: 24px 0;
+        }
+        
+        .quote-text {
+            font-size: clamp(18px, 3vw, 28px);
+            font-style: italic;
+            line-height: 1.4;
+            color: var(--text);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(48, 209, 88, 0.15) 0%, rgba(94, 224, 122, 0.05) 100%);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 32px);
+            margin-top: 24px;
+        }
+        
+        .bundle-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 600px;
+            margin: 32px auto;
+        }
+        
+        .bundle-layer {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .bundle-layer.primary { border-color: var(--accent); }
+        .bundle-layer.secondary { border-color: var(--purple); }
+        .bundle-layer.tertiary { border-color: var(--cyan); }
+        
+        .bundle-icon {
+            font-size: 24px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .bundle-name {
+            font-weight: 600;
+            font-size: clamp(14px, 2vw, 16px);
+        }
+        
+        .bundle-layer.primary .bundle-name { color: var(--accent); }
+        .bundle-layer.secondary .bundle-name { color: var(--purple); }
+        .bundle-layer.tertiary .bundle-name { color: var(--cyan); }
+        
+        .bundle-desc {
+            font-size: clamp(12px, 1.5vw, 14px);
+            color: var(--text-dim);
+            margin-left: auto;
+        }
+        
+        .compose-arrow {
+            text-align: center;
+            font-size: 24px;
+            color: var(--accent);
+        }
+        
+        .metric-row {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 32px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: clamp(48px, 10vw, 72px);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .metric-label {
+            font-size: clamp(12px, 1.5vw, 14px);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        
+        /* Navigation */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+        
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-family: 'SF Mono', monospace;
+            z-index: 100;
+        }
+        
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 32px;
+            font-size: 14px;
+            color: var(--text-dim);
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover { color: var(--accent); }
+        
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 80px;
+            width: 15%;
+            cursor: pointer;
+            z-index: 50;
+        }
+        
+        .click-zone.left { left: 0; }
+        .click-zone.right { right: 0; }
+    </style>
+</head>
+<body>
+    <a href="00-master-overview.html" class="back-link">← Back to Overview</a>
+    
+    <div class="deck">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide title-slide active" data-slide="1">
+            <div class="badge">Personal Project</div>
+            <h1 class="headline">Bundle Orchestration</h1>
+            <p class="subhead" style="max-width: 700px;">
+                <span style="color: var(--accent);">wilMM</span>—a personal demo of Amplifier's multi-bundle composition capabilities.
+            </p>
+        </div>
+        
+        <!-- Slide 2: The Purpose -->
+        <div class="slide" data-slide="2">
+            <div class="section-label">Why This Project</div>
+            <h2 class="headline">Learning by Building</h2>
+            <div class="grid-2" style="margin-top: 24px;">
+                <div>
+                    <div class="quote-block">
+                        <div class="quote-text">"I wanted to see how I could orchestrate multiple bundles together to make something work."</div>
+                    </div>
+                    <div class="body-text" style="margin-top: 24px;">
+                        This isn't about the healthcare domain—it's about understanding Amplifier's composition model. How do bundles connect? How do agents hand off? How does context flow?
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">The Real Focus</div>
+                    <ul class="bullet-list">
+                        <li><strong>Bundle composition</strong>—how pieces fit together</li>
+                        <li><strong>Multi-agent orchestration</strong>—handoffs and context</li>
+                        <li><strong>Practical learning</strong>—by building something real</li>
+                        <li><strong>Pattern discovery</strong>—what works, what doesn't</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: The Architecture -->
+        <div class="slide" data-slide="3">
+            <div class="section-label">Architecture</div>
+            <h2 class="headline" style="margin-bottom: 24px;">Bundle Composition</h2>
+            <div class="bundle-diagram">
+                <div class="bundle-layer primary">
+                    <div class="bundle-icon">🏥</div>
+                    <div class="bundle-name">wilMM Bundle</div>
+                    <div class="bundle-desc">Domain-specific agents & context</div>
+                </div>
+                <div class="compose-arrow">↓ composes</div>
+                <div class="bundle-layer secondary">
+                    <div class="bundle-icon">🎨</div>
+                    <div class="bundle-name">Design Intelligence</div>
+                    <div class="bundle-desc">Research & analysis capabilities</div>
+                </div>
+                <div class="compose-arrow">↓ composes</div>
+                <div class="bundle-layer tertiary">
+                    <div class="bundle-icon">🔧</div>
+                    <div class="bundle-name">Foundation</div>
+                    <div class="bundle-desc">Core agents & behaviors</div>
+                </div>
+            </div>
+            <div class="body-text" style="text-align: center; max-width: 600px; margin: 0 auto;">
+                Each layer adds capabilities. The composition model means you get everything below, plus your additions on top.
+            </div>
+        </div>
+        
+        <!-- Slide 4: What Was Built -->
+        <div class="slide" data-slide="4">
+            <div class="section-label">The Work</div>
+            <h2 class="headline" style="margin-bottom: 32px;">What Was Built</h2>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-title" style="color: var(--text);">Custom Agents</div>
+                    <div class="body-text" style="margin-bottom: 16px;">
+                        Domain-specific agents that leverage underlying capabilities.
+                    </div>
+                    <ul class="bullet-list">
+                        <li>Health context agents</li>
+                        <li>Data integration patterns</li>
+                        <li>Workflow orchestration</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--text);">Bundle Structure</div>
+                    <div class="body-text" style="margin-bottom: 16px;">
+                        Proper composition following Amplifier patterns.
+                    </div>
+                    <ul class="bullet-list">
+                        <li>Context files</li>
+                        <li>Agent definitions</li>
+                        <li>Behavior compositions</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--text);">Integration Points</div>
+                    <div class="body-text" style="margin-bottom: 16px;">
+                        Connecting to external systems and APIs.
+                    </div>
+                    <ul class="bullet-list">
+                        <li>Health data sources</li>
+                        <li>Analytics pipelines</li>
+                        <li>Notification systems</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: The Learnings -->
+        <div class="slide" data-slide="5">
+            <div class="section-label">Insights</div>
+            <h2 class="headline" style="margin-bottom: 32px;">What I Learned</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">What Works Well</div>
+                    <ul class="bullet-list">
+                        <li><strong>Composition is powerful</strong>—inherit capabilities without copying</li>
+                        <li><strong>Context flows naturally</strong>—agents share what they need</li>
+                        <li><strong>Behaviors are reusable</strong>—define once, use everywhere</li>
+                        <li><strong>Agents specialize cleanly</strong>—each does one thing well</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">What Needs Attention</div>
+                    <ul class="bullet-list">
+                        <li><strong>Context management</strong>—knowing what to pass and when</li>
+                        <li><strong>Handoff clarity</strong>—explicit about what agent does what</li>
+                        <li><strong>Error boundaries</strong>—when one agent fails, what happens?</li>
+                        <li><strong>Testing patterns</strong>—how to validate compositions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: By The Numbers -->
+        <div class="slide" data-slide="6">
+            <div class="section-label">This Week</div>
+            <h2 class="headline" style="margin-bottom: 24px;">By The Numbers</h2>
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-value">66</div>
+                    <div class="metric-label">Conversation Turns</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">27+</div>
+                    <div class="metric-label">Commits</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Bundle Layers</div>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 32px;">
+                <div class="card-title" style="color: var(--text); margin-bottom: 12px;">A Working Demo</div>
+                <div class="body-text" style="color: var(--text);">
+                    This isn't production software—it's a learning project. The value is in understanding how Amplifier's pieces fit together, not in the healthcare domain itself.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 7: Implications for Amplifier -->
+        <div class="slide" data-slide="7">
+            <div class="section-label">Takeaways</div>
+            <h2 class="headline" style="margin-bottom: 32px;">For Amplifier</h2>
+            <div class="grid-2">
+                <div>
+                    <div class="quote-block">
+                        <div class="quote-text">"Building something real reveals what the documentation doesn't—the friction points, the happy paths, the patterns that emerge."</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Feedback Loop</div>
+                    <ul class="bullet-list">
+                        <li>Bundle composition patterns documented</li>
+                        <li>Friction points identified for improvement</li>
+                        <li>Real usage informs ecosystem design</li>
+                        <li>Learning shared with team</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="body-text" style="margin-top: 32px; text-align: center; max-width: 700px; margin-left: auto; margin-right: auto;">
+                Personal projects like this are how we understand what users will experience—and how we improve the developer experience for everyone.
+            </div>
+        </div>
+        
+        <!-- Slide 8: What's Next -->
+        <div class="slide" data-slide="8">
+            <div class="section-label">Looking Ahead</div>
+            <h2 class="headline" style="margin-bottom: 32px;">Next Steps</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">For This Project</div>
+                    <ul class="bullet-list">
+                        <li>Continue refinement</li>
+                        <li>Document patterns discovered</li>
+                        <li>Share learnings with team</li>
+                        <li>Identify areas for Amplifier improvement</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">For Amplifier</div>
+                    <ul class="bullet-list">
+                        <li>Better composition documentation</li>
+                        <li>Clearer handoff patterns</li>
+                        <li>Testing utilities for bundles</li>
+                        <li>Error boundary guidance</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="quote-block" style="margin-top: 32px;">
+                <div class="quote-text" style="font-size: clamp(16px, 2.5vw, 24px);">"The best way to understand a system is to build something with it."</div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-dots" id="navDots"></div>
+    <div class="slide-counter" id="slideCounter">1 / 8</div>
+    <div class="click-zone left" onclick="prevSlide()"></div>
+    <div class="click-zone right" onclick="nextSlide()"></div>
+    
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 8;
+        
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            currentSlide = n;
+            
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.querySelector(`[data-slide="${n}"]`).classList.add('active');
+            
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i + 1 === n);
+            });
+            
+            document.getElementById('slideCounter').textContent = `${n} / ${totalSlides}`;
+        }
+        
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+        
+        const navDots = document.getElementById('navDots');
+        for (let i = 1; i <= totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (i === 1 ? ' active' : '');
+            dot.onclick = () => showSlide(i);
+            navDots.appendChild(dot);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        });
+        
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+        }, { passive: true });
+    </script>
+</body>
+</html>
