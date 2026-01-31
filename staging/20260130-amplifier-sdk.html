@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Announcing the Amplifier SDK - TypeScript and Python client libraries that make building applications on top of Amplifier's AI capabilities simple.">
+    <meta name="author" content="Amplifier Team">
+    <meta name="keywords" content="Amplifier, SDK, TypeScript, Python, AI, Developer Tools">
+    <title>Building on Amplifier Just Got a Whole Lot Easier | Amplifier Blog</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+            font-size: 21px;
+            line-height: 1.58;
+            letter-spacing: -0.003em;
+            color: #242424;
+            background: #ffffff;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Container - Medium's centered column */
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header - Simple, no background */
+        .article-header {
+            padding: 80px 0 40px;
+        }
+
+        .article-title {
+            font-family: Georgia, "Times New Roman", Times, serif;
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 8px;
+            color: #242424;
+            letter-spacing: -0.015em;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 16px;
+            color: #6B6B6B;
+            margin-top: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .meta-item::before {
+            content: "·";
+            margin: 0 8px;
+            color: #6B6B6B;
+        }
+
+        .meta-item:first-child::before {
+            display: none;
+        }
+
+        /* Article Content */
+        .article-content {
+            padding-bottom: 80px;
+        }
+
+        /* Typography */
+        h2 {
+            font-family: Georgia, "Times New Roman", Times, serif;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-top: 56px;
+            margin-bottom: 12px;
+            color: #242424;
+            letter-spacing: -0.012em;
+        }
+
+        h2:first-child {
+            margin-top: 0;
+        }
+
+        h3 {
+            font-family: Georgia, "Times New Roman", Times, serif;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.35;
+            margin-top: 40px;
+            margin-bottom: 8px;
+            color: #242424;
+            letter-spacing: -0.009em;
+        }
+
+        p {
+            margin-bottom: 32px;
+            color: #242424;
+            font-size: 21px;
+            line-height: 1.58;
+            letter-spacing: -0.003em;
+        }
+
+        strong {
+            font-weight: 700;
+            color: #242424;
+        }
+
+        .lead {
+            font-size: 21px;
+            line-height: 1.58;
+            color: #242424;
+            margin-bottom: 32px;
+        }
+
+        .callout {
+            font-size: 26px;
+            font-weight: 700;
+            color: #242424;
+            margin: 40px 0;
+            padding: 0;
+            font-style: italic;
+        }
+
+        /* Links */
+        a {
+            color: #242424;
+            text-decoration: underline;
+        }
+
+        a:hover {
+            color: #000000;
+        }
+
+        /* Lists */
+        ul {
+            margin: 32px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            color: #242424;
+            font-size: 21px;
+            line-height: 1.58;
+            padding-left: 5px;
+        }
+
+        li::marker {
+            color: #242424;
+        }
+
+        /* Feature Sections - Plain text, no boxes */
+        .features {
+            margin: 40px 0;
+        }
+
+        .feature {
+            margin-bottom: 40px;
+        }
+
+        .feature h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .feature p {
+            margin-bottom: 0;
+            font-size: 21px;
+            line-height: 1.58;
+        }
+
+        /* Code Blocks - Medium style */
+        pre {
+            background: #F7F7F7;
+            color: #393939;
+            padding: 24px;
+            border-left: 3px solid #000000;
+            overflow-x: auto;
+            margin: 32px 0;
+            line-height: 1.5;
+            font-size: 16px;
+            font-family: Monaco, "Courier New", Courier, monospace;
+        }
+
+        code {
+            font-family: Monaco, "Courier New", Courier, monospace;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        p code {
+            background: #F7F7F7;
+            color: #393939;
+            padding: 3px 6px;
+            font-size: 18px;
+        }
+
+        /* Syntax Highlighting - Subtle */
+        .keyword { color: #393939; font-weight: 600; }
+        .string { color: #393939; }
+        .function { color: #393939; }
+        .comment { color: #6B6B6B; font-style: italic; }
+        .operator { color: #393939; }
+        .type { color: #393939; font-weight: 600; }
+        .punctuation { color: #393939; }
+
+        /* Architecture Diagram - Simple text-based */
+        .architecture-diagram {
+            margin: 40px 0;
+            padding: 0;
+        }
+
+        .diagram-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .diagram-layer {
+            padding: 20px 24px;
+            border: 1px solid #E6E6E6;
+            position: relative;
+        }
+
+        .diagram-layer-title {
+            font-weight: 700;
+            color: #242424;
+            margin-bottom: 8px;
+            font-size: 21px;
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+        }
+
+        .diagram-layer-content {
+            color: #6B6B6B;
+            font-size: 18px;
+            line-height: 1.58;
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+        }
+
+        .diagram-layer-content ul {
+            margin: 8px 0 0 0;
+            padding-left: 24px;
+        }
+
+        .diagram-layer-content li {
+            margin-bottom: 4px;
+            font-size: 18px;
+            color: #6B6B6B;
+        }
+
+        .diagram-arrow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 20px;
+            color: #6B6B6B;
+            font-size: 16px;
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+        }
+
+        /* Steps Section - Simple numbered */
+        .steps {
+            margin: 40px 0;
+        }
+
+        .step {
+            margin-bottom: 48px;
+        }
+
+        .step h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .step p {
+            margin-bottom: 16px;
+        }
+
+        /* Resources Section - Plain text */
+        .resources {
+            margin: 48px 0;
+            padding: 0;
+        }
+
+        .resources h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+
+        .resources ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .resources li {
+            margin-bottom: 16px;
+            padding: 0;
+            font-size: 21px;
+        }
+
+        /* Footer CTA - Plain text, no background */
+        .cta {
+            text-align: center;
+            padding: 0;
+            margin: 80px 0 40px;
+        }
+
+        .cta h2 {
+            color: #242424;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .cta p {
+            color: #242424;
+            font-size: 21px;
+            line-height: 1.58;
+            margin-bottom: 0;
+        }
+
+        /* Divider */
+        hr {
+            border: none;
+            border-top: 1px solid #E6E6E6;
+            margin: 56px 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                font-size: 18px;
+            }
+
+            .article-title {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 26px;
+            }
+
+            h3 {
+                font-size: 21px;
+            }
+
+            p, .lead, li {
+                font-size: 18px;
+            }
+
+            .callout {
+                font-size: 22px;
+            }
+
+            pre {
+                font-size: 14px;
+                padding: 20px;
+            }
+
+            .container {
+                padding: 0 20px;
+            }
+
+            .article-header {
+                padding: 60px 0 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="article-header">
+        <div class="container">
+            <h1 class="article-title">Building on Amplifier Just Got a Whole Lot Easier</h1>
+            <div class="article-meta">
+                <span class="meta-item">Amplifier Team</span>
+                <span class="meta-item">January 30, 2026</span>
+                <span class="meta-item">8 min read</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <article class="article-content">
+            <p class="lead">
+                We've all been there. You're building an application that needs to integrate with a powerful platform. You crack open the API documentation, fire up your HTTP client, and start writing request handlers. Before long, you're neck-deep in connection pooling, error handling, retry logic, and parsing streaming responses. What you wanted to build—a great application—has taken a back seat to wrestling with API plumbing.
+            </p>
+
+            <p class="callout">That ends today.</p>
+
+            <p>
+                We're excited to announce the <strong>Amplifier SDK</strong>—TypeScript and Python client libraries that make building applications on top of Amplifier's AI capabilities as simple as a few lines of code.
+            </p>
+
+            <h2>The Problem: Raw APIs Are Nobody's Friend</h2>
+
+            <p>
+                Amplifier's <code>amplifier-app-runtime</code> exposes a powerful HTTP + Server-Sent Events (SSE) API that gives you access to:
+            </p>
+
+            <ul>
+                <li>AI agent sessions with full context management</li>
+                <li>Real-time streaming responses</li>
+                <li>Multi-provider AI model support (OpenAI, Anthropic, local models)</li>
+                <li>Tool execution with approval flows</li>
+                <li>Sub-agent orchestration</li>
+            </ul>
+
+            <p>But here's the thing: <strong>HTTP APIs are a starting point, not a solution.</strong></p>
+
+            <p>Without a proper SDK, developers face:</p>
+
+            <ul>
+                <li><strong>Type chaos:</strong> No IntelliSense, no autocomplete, just string soup and crossed fingers</li>
+                <li><strong>Streaming headaches:</strong> SSE parsing, connection management, error recovery—all on you</li>
+                <li><strong>Protocol complexity:</strong> Session lifecycle, event types, approval flows—learn it all from scratch</li>
+                <li><strong>Language mismatch:</strong> The API speaks JSON over HTTP; your Python/TypeScript app speaks objects and promises</li>
+                <li><strong>Error-prone code:</strong> Every developer reinvents the wheel, each with their own bugs</li>
+            </ul>
+
+            <p>Even worse, direct API calls meant we weren't testing what developers would actually use. We needed to eat our own dog food.</p>
+
+            <h2>The Solution: SDKs That Feel Like Home</h2>
+
+            <p>
+                The Amplifier SDK provides idiomatic, fully-typed client libraries for TypeScript and Python. They handle all the HTTP/SSE complexity so you can focus on building your application.
+            </p>
+
+            <p>Here's what you get:</p>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>Type Safety</h3>
+                    <p>Full TypeScript types and Python type hints. Your IDE knows what <code>event.type</code> can be. Your code editor autocompletes <code>client.createSession()</code>. Bugs caught at compile time, not runtime.</p>
+                </div>
+
+                <div class="feature">
+                    <h3>Streaming Built-In</h3>
+                    <p>Async iterators (Python) and async generators (TypeScript) make streaming responses feel natural. No manual SSE parsing, no connection juggling.</p>
+                </div>
+
+                <div class="feature">
+                    <h3>Ergonomic APIs</h3>
+                    <p>The SDK speaks your language. Python developers get <code>async with</code> context managers and snake_case methods. TypeScript developers get promises, camelCase, and <code>for await...of</code> loops.</p>
+                </div>
+
+                <div class="feature">
+                    <h3>Simple Session Management</h3>
+                    <p>Create a session, send prompts, get responses, clean up. The SDK handles the lifecycle.</p>
+                </div>
+
+                <div class="feature">
+                    <h3>Approval Flows</h3>
+                    <p>When an agent needs permission to do something, the SDK surfaces it as an event. Respond with one method call.</p>
+                </div>
+            </div>
+
+            <h2>How It Works: The 30-Second Demo</h2>
+
+            <h3>TypeScript</h3>
+            <pre><code><span class="keyword">import</span> <span class="punctuation">{</span> <span class="type">AmplifierClient</span> <span class="punctuation">}</span> <span class="keyword">from</span> <span class="string">"amplifier-sdk"</span><span class="punctuation">;</span>
+
+<span class="keyword">const</span> client <span class="operator">=</span> <span class="keyword">new</span> <span class="function">AmplifierClient</span><span class="punctuation">();</span>
+
+<span class="comment">// Create a session</span>
+<span class="keyword">const</span> session <span class="operator">=</span> <span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">createSession</span><span class="punctuation">({</span> bundle<span class="operator">:</span> <span class="string">"foundation"</span> <span class="punctuation">});</span>
+
+<span class="comment">// Stream a response</span>
+<span class="keyword">for await</span> <span class="punctuation">(</span><span class="keyword">const</span> event <span class="keyword">of</span> client<span class="punctuation">.</span><span class="function">prompt</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">,</span> <span class="string">"Write a haiku about coding"</span><span class="punctuation">))</span> <span class="punctuation">{</span>
+  <span class="keyword">if</span> <span class="punctuation">(</span>event<span class="punctuation">.</span>type <span class="operator">===</span> <span class="string">"content.delta"</span><span class="punctuation">)</span> <span class="punctuation">{</span>
+    process<span class="punctuation">.</span>stdout<span class="punctuation">.</span><span class="function">write</span><span class="punctuation">(</span>event<span class="punctuation">.</span>data<span class="punctuation">.</span>delta <span class="keyword">as</span> <span class="type">string</span><span class="punctuation">);</span>
+  <span class="punctuation">}</span>
+<span class="punctuation">}</span>
+
+<span class="comment">// Clean up</span>
+<span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">deleteSession</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">);</span></code></pre>
+
+            <h3>Python</h3>
+            <pre><code><span class="keyword">import</span> asyncio
+<span class="keyword">from</span> amplifier_sdk <span class="keyword">import</span> <span class="type">AmplifierClient</span>
+
+<span class="keyword">async def</span> <span class="function">main</span><span class="punctuation">():</span>
+    <span class="keyword">async with</span> <span class="function">AmplifierClient</span><span class="punctuation">()</span> <span class="keyword">as</span> client<span class="punctuation">:</span>
+        <span class="comment"># Create a session</span>
+        session <span class="operator">=</span> <span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">create_session</span><span class="punctuation">(</span>bundle<span class="operator">=</span><span class="string">"foundation"</span><span class="punctuation">)</span>
+        
+        <span class="comment"># Stream a response</span>
+        <span class="keyword">async for</span> event <span class="keyword">in</span> client<span class="punctuation">.</span><span class="function">prompt</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">,</span> <span class="string">"Write a haiku about coding"</span><span class="punctuation">):</span>
+            <span class="keyword">if</span> event<span class="punctuation">.</span>type <span class="operator">==</span> <span class="string">"content.delta"</span><span class="punctuation">:</span>
+                <span class="function">print</span><span class="punctuation">(</span>event<span class="punctuation">.</span>data<span class="punctuation">.</span><span class="function">get</span><span class="punctuation">(</span><span class="string">"delta"</span><span class="punctuation">,</span> <span class="string">""</span><span class="punctuation">),</span> end<span class="operator">=</span><span class="string">""</span><span class="punctuation">,</span> flush<span class="operator">=</span><span class="type">True</span><span class="punctuation">)</span>
+        
+        <span class="comment"># Clean up</span>
+        <span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">delete_session</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">)</span>
+
+asyncio<span class="punctuation">.</span><span class="function">run</span><span class="punctuation">(</span><span class="function">main</span><span class="punctuation">())</span></code></pre>
+
+            <p>That's it. No HTTP clients, no SSE parsers, no protocol documentation. Just clean, readable code.</p>
+
+            <h2>Real-World Patterns</h2>
+
+            <h3>One-Shot Execution</h3>
+            <p>Need a quick answer? The SDK handles session creation and cleanup for you:</p>
+
+            <pre><code><span class="keyword">async with</span> <span class="function">AmplifierClient</span><span class="punctuation">()</span> <span class="keyword">as</span> client<span class="punctuation">:</span>
+    response <span class="operator">=</span> <span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">run</span><span class="punctuation">(</span><span class="string">"What's the weather in Paris?"</span><span class="punctuation">)</span>
+    <span class="function">print</span><span class="punctuation">(</span>response<span class="punctuation">.</span>content<span class="punctuation">)</span></code></pre>
+
+            <h3>Handling Tool Calls</h3>
+            <p>See what the agent is doing in real-time:</p>
+
+            <pre><code><span class="keyword">for await</span> <span class="punctuation">(</span><span class="keyword">const</span> event <span class="keyword">of</span> client<span class="punctuation">.</span><span class="function">prompt</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">,</span> <span class="string">"Analyze this codebase"</span><span class="punctuation">))</span> <span class="punctuation">{</span>
+  <span class="keyword">if</span> <span class="punctuation">(</span>event<span class="punctuation">.</span>type <span class="operator">===</span> <span class="string">"tool.call"</span><span class="punctuation">)</span> <span class="punctuation">{</span>
+    console<span class="punctuation">.</span><span class="function">log</span><span class="punctuation">(</span><span class="string">`Using tool: ${event.data.tool_name}`</span><span class="punctuation">);</span>
+  <span class="punctuation">}</span>
+  <span class="keyword">if</span> <span class="punctuation">(</span>event<span class="punctuation">.</span>type <span class="operator">===</span> <span class="string">"content.delta"</span><span class="punctuation">)</span> <span class="punctuation">{</span>
+    process<span class="punctuation">.</span>stdout<span class="punctuation">.</span><span class="function">write</span><span class="punctuation">(</span>event<span class="punctuation">.</span>data<span class="punctuation">.</span>delta <span class="keyword">as</span> <span class="type">string</span><span class="punctuation">);</span>
+  <span class="punctuation">}</span>
+<span class="punctuation">}</span></code></pre>
+
+            <h3>Approval Flows</h3>
+            <p>Let users control what agents can do:</p>
+
+            <pre><code><span class="keyword">async for</span> event <span class="keyword">in</span> client<span class="punctuation">.</span><span class="function">prompt</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">,</span> <span class="string">"Delete old logs"</span><span class="punctuation">):</span>
+    <span class="keyword">if</span> event<span class="punctuation">.</span>type <span class="operator">==</span> <span class="string">"approval.required"</span><span class="punctuation">:</span>
+        choice <span class="operator">=</span> <span class="function">input</span><span class="punctuation">(</span><span class="string">f"Allow? {event.data['prompt']} (y/n): "</span><span class="punctuation">)</span>
+        <span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">respond_approval</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">,</span> event<span class="punctuation">.</span>data<span class="punctuation">[</span><span class="string">"request_id"</span><span class="punctuation">],</span> choice<span class="punctuation">)</span></code></pre>
+
+            <h2>The Architecture: Clean Separation</h2>
+
+            <div class="architecture-diagram">
+                <div class="diagram-container">
+                    <div class="diagram-layer">
+                        <div class="diagram-layer-title">Your Application</div>
+                        <div class="diagram-layer-content">
+                            Chat apps, automation tools, agent interfaces, custom integrations
+                        </div>
+                    </div>
+
+                    <div class="diagram-arrow">↓</div>
+
+                    <div class="diagram-layer">
+                        <div class="diagram-layer-title">Amplifier SDK (TypeScript / Python)</div>
+                        <div class="diagram-layer-content">
+                            <ul>
+                                <li>Type-safe client methods</li>
+                                <li>Streaming abstraction</li>
+                                <li>Session lifecycle management</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="diagram-arrow">↓</div>
+
+                    <div class="diagram-layer">
+                        <div class="diagram-layer-title">amplifier-app-runtime (localhost:4096)</div>
+                        <div class="diagram-layer-content">
+                            <ul>
+                                <li>REST API + SSE streaming</li>
+                                <li>Session management</li>
+                                <li>Protocol handling</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="diagram-arrow">↓</div>
+
+                    <div class="diagram-layer">
+                        <div class="diagram-layer-title">amplifier-foundation + amplifier-core</div>
+                        <div class="diagram-layer-content">
+                            <ul>
+                                <li>AI agents and tools</li>
+                                <li>Provider integrations</li>
+                                <li>Core capabilities</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p>
+                The SDK sits between your application and the runtime, handling all the protocol details. You work with clean, typed interfaces. The runtime handles the heavy lifting.
+            </p>
+
+            <h2>Getting Started in 3 Steps</h2>
+
+            <div class="steps">
+                <div class="step">
+                    <h3>1. Start the Runtime</h3>
+                    <pre><code>cd amplifier-app-runtime
+uv run python -m amplifier_app_runtime.cli --port 4096</code></pre>
+                </div>
+
+                <div class="step">
+                    <h3>2. Install the SDK</h3>
+                    <p><strong>TypeScript:</strong></p>
+                    <pre><code>npm install amplifier-sdk</code></pre>
+                    <p><strong>Python:</strong></p>
+                    <pre><code>pip install amplifier-sdk</code></pre>
+                </div>
+
+                <div class="step">
+                    <h3>3. Build Something Cool</h3>
+                    <pre><code><span class="keyword">import</span> <span class="punctuation">{</span> <span class="type">AmplifierClient</span> <span class="punctuation">}</span> <span class="keyword">from</span> <span class="string">"amplifier-sdk"</span><span class="punctuation">;</span>
+
+<span class="keyword">const</span> client <span class="operator">=</span> <span class="keyword">new</span> <span class="function">AmplifierClient</span><span class="punctuation">();</span>
+<span class="keyword">const</span> session <span class="operator">=</span> <span class="keyword">await</span> client<span class="punctuation">.</span><span class="function">createSession</span><span class="punctuation">();</span>
+
+<span class="keyword">for await</span> <span class="punctuation">(</span><span class="keyword">const</span> event <span class="keyword">of</span> client<span class="punctuation">.</span><span class="function">prompt</span><span class="punctuation">(</span>session<span class="punctuation">.</span>id<span class="punctuation">,</span> <span class="string">"Your prompt here"</span><span class="punctuation">))</span> <span class="punctuation">{</span>
+  <span class="comment">// Handle events</span>
+<span class="punctuation">}</span></code></pre>
+                </div>
+            </div>
+
+            <h2>What's Next?</h2>
+
+            <p>This is just the beginning. We're actively developing:</p>
+
+            <ul>
+                <li><strong>More language SDKs</strong> (Go, Rust, Java—tell us what you need!)</li>
+                <li><strong>Richer event types</strong> (progress tracking, cost monitoring, debug traces)</li>
+                <li><strong>Webhook support</strong> (async execution patterns)</li>
+                <li><strong>UI components</strong> (drop-in React/Vue components for common patterns)</li>
+                <li><strong>More examples</strong> (chat apps, automation tools, agent orchestrators)</li>
+            </ul>
+
+            <h2>We Want Your Feedback</h2>
+
+            <p>
+                The SDK is <strong>ready to use today</strong>, but it's still early days. We're building this for you, the community. Here's how you can help:
+            </p>
+
+            <ul>
+                <li><strong>Try it out:</strong> Build something, break something, tell us what's missing</li>
+                <li><strong>Share patterns:</strong> Found a great way to use the SDK? Show us!</li>
+                <li><strong>Report issues:</strong> <a href="https://github.com/manojp99/amplifier-sdk/issues" target="_blank">GitHub Issues</a> for bugs and feature requests</li>
+                <li><strong>Contribute:</strong> Both SDKs are open source—PRs welcome!</li>
+            </ul>
+
+            <div class="resources">
+                <h2>Resources</h2>
+                <ul>
+                    <li><strong>Repository:</strong> <a href="https://github.com/manojp99/amplifier-sdk" target="_blank">github.com/manojp99/amplifier-sdk</a></li>
+                    <li><strong>TypeScript Docs:</strong> <a href="https://github.com/manojp99/amplifier-sdk/tree/main/sdks/typescript" target="_blank">sdks/typescript/README.md</a></li>
+                    <li><strong>Python Docs:</strong> <a href="https://github.com/manojp99/amplifier-sdk/tree/main/sdks/python" target="_blank">sdks/python/README.md</a></li>
+                    <li><strong>Discussion:</strong> Join us on <a href="https://github.com/manojp99/amplifier-sdk/discussions" target="_blank">GitHub Discussions</a></li>
+                    <li><strong>Examples:</strong> Check out <a href="https://github.com/manojp99/amplifier-sdk/tree/main/examples" target="_blank">examples/</a> for full applications</li>
+                </ul>
+            </div>
+
+            <hr>
+
+            <div class="cta">
+                <h2>The SDK is Ready. What Will You Build?</h2>
+                <p>
+                    Building on Amplifier used to mean wrestling with HTTP and SSE. Now it means writing a few lines of clean, typed code and shipping your application.
+                </p>
+            </div>
+
+            <p style="text-align: center; margin-top: 48px; color: #6B6B6B; font-style: italic;">
+                — The Amplifier Team
+            </p>
+        </article>
+    </main>
+</body>
+</html>
