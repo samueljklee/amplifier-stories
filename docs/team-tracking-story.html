@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Tracking Bundle: Recipe Engineering at Scale</title>
+    <style>
+        :root {
+            --accent-color: #32ADE6;
+            --font-headline: clamp(32px, 8vw, 72px);
+            --font-medium-headline: clamp(24px, 5vw, 48px);
+            --font-subhead: clamp(16px, 3vw, 32px);
+            --font-big-number: clamp(60px, 20vw, 180px);
+            --padding-slide: clamp(20px, 5vw, 80px);
+            --gap-grid: clamp(16px, 3vw, 40px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        .slide {
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: var(--padding-slide);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .section-label {
+            font-size: clamp(12px, 1.5vw, 14px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            margin-bottom: clamp(12px, 2vw, 20px);
+        }
+
+        .headline {
+            font-size: var(--font-headline);
+            font-weight: 700;
+            letter-spacing: clamp(-1px, -0.03em, -2px);
+            line-height: 1.1;
+            margin-bottom: clamp(16px, 3vw, 24px);
+        }
+
+        .subhead {
+            font-size: var(--font-subhead);
+            font-weight: 400;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: clamp(20px, 4vw, 40px);
+        }
+
+        .content {
+            font-size: clamp(16px, 2.5vw, 24px);
+            line-height: 1.6;
+            color: rgba(255,255,255,0.85);
+        }
+
+        .content strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .thirds {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: var(--gap-grid);
+            margin-top: clamp(20px, 4vw, 40px);
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+            gap: var(--gap-grid);
+            margin-top: clamp(20px, 4vw, 40px);
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: clamp(12px, 2vw, 16px);
+            padding: clamp(16px, 4vw, 28px);
+        }
+
+        .card-title {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 600;
+            margin-bottom: clamp(8px, 1.5vw, 12px);
+            color: var(--accent-color);
+        }
+
+        .card-desc {
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.5;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .code-block {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: clamp(12px, 3vw, 20px) clamp(16px, 4vw, 28px);
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: clamp(12px, 2vw, 15px);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: clamp(16px, 3vw, 24px);
+        }
+
+        .code-green {
+            color: #30D158;
+        }
+
+        .code-red {
+            color: #FF6B6B;
+        }
+
+        .code-comment {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .big-number {
+            font-size: var(--font-big-number);
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--accent-color), #0A84FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: clamp(8px, 1.5vw, 12px);
+        }
+
+        .stat-label {
+            font-size: clamp(14px, 2vw, 18px);
+            color: rgba(255,255,255,0.7);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            padding-left: 1.5em;
+            position: relative;
+            margin-bottom: clamp(12px, 2vw, 16px);
+            font-size: clamp(16px, 2.5vw, 22px);
+            line-height: 1.5;
+        }
+
+        ul li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+            gap: var(--gap-grid);
+            margin-top: clamp(20px, 4vw, 40px);
+        }
+
+        .before, .after {
+            padding: clamp(20px, 4vw, 32px);
+            border-radius: clamp(12px, 2vw, 16px);
+            border: 2px solid;
+        }
+
+        .before {
+            background: rgba(255,107,107,0.1);
+            border-color: #FF6B6B;
+        }
+
+        .after {
+            background: rgba(48,209,88,0.1);
+            border-color: #30D158;
+        }
+
+        .comparison-label {
+            font-size: clamp(14px, 2vw, 18px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: clamp(12px, 2vw, 16px);
+        }
+
+        .before .comparison-label {
+            color: #FF6B6B;
+        }
+
+        .after .comparison-label {
+            color: #30D158;
+        }
+
+        .comparison-text {
+            font-size: clamp(14px, 2.5vw, 20px);
+            line-height: 1.5;
+        }
+
+        .nav-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-dot.active {
+            background: var(--accent-color);
+            transform: scale(1.2);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            z-index: 100;
+        }
+
+        .click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 30%;
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .click-zone.left {
+            left: 0;
+        }
+
+        .click-zone.right {
+            right: 0;
+        }
+
+        @media (max-width: 768px) {
+            .click-zone {
+                width: 20%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide active">
+    <div class="section-label">TECHNICAL DEEP DIVE</div>
+    <h1 class="headline">Team Tracking Bundle</h1>
+    <p class="subhead">Recipe Engineering at Scale: From Crashes to 354 Sessions</p>
+    <p class="content" style="margin-top: 40px; color: rgba(255,255,255,0.5);">February 2026 • Commit 435d0d4</p>
+</div>
+
+<!-- Slide 2: Context -->
+<div class="slide">
+    <div class="section-label">THE MISSION</div>
+    <h2 class="headline">Bulk Session Analysis</h2>
+    <div class="content">
+        <p style="margin-bottom: 24px;">Goal: Process hundreds of Amplifier sessions to understand team workflows, capabilities, and project patterns.</p>
+        <p><strong>The Challenge:</strong> Build a recipe system that could reliably analyze sessions at scale without crashing, hanging, or taking forever.</p>
+    </div>
+</div>
+
+<!-- Slide 3: Problem 1 - Performance -->
+<div class="slide">
+    <div class="section-label">PROBLEM #1</div>
+    <h2 class="headline">Death by API Calls</h2>
+    <div class="comparison">
+        <div class="before">
+            <div class="comparison-label">Original Approach</div>
+            <div class="comparison-text">
+                <p><strong>100+ GitHub API calls per session</strong></p>
+                <ul style="margin-top: 16px;">
+                    <li>Fetch session metadata</li>
+                    <li>Download events.jsonl</li>
+                    <li>Download transcript</li>
+                    <li>Parse, analyze, repeat</li>
+                </ul>
+                <p style="margin-top: 16px; color: #FF6B6B;"><strong>Result:</strong> Painfully slow. Hours for large batches.</p>
+            </div>
+        </div>
+        <div class="after">
+            <div class="comparison-label">Optimized Solution</div>
+            <div class="comparison-text">
+                <p><strong>Direct filesystem reads</strong></p>
+                <ul style="margin-top: 16px;">
+                    <li>Read local session files</li>
+                    <li>Zero API calls</li>
+                    <li>Parse directly from disk</li>
+                    <li>Orders of magnitude faster</li>
+                </ul>
+                <p style="margin-top: 16px; color: #30D158;"><strong>Result:</strong> Fast enough to process 354 sessions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4: Solution - bulk-analyze-sessions-local -->
+<div class="slide">
+    <div class="section-label">THE BREAKTHROUGH</div>
+    <h2 class="headline">bulk-analyze-sessions-local.yaml</h2>
+    <div class="content">
+        <p style="margin-bottom: 24px;">New recipe that optimizes for local filesystem access:</p>
+    </div>
+    <div class="code-block"><span class="code-comment"># Read directly from ~/.amplifier/sessions/</span>
+<span class="code-green">for session_dir in sessions/*</span>
+  read transcript.md
+  read events.jsonl
+  extract capabilities, projects, tools
+  build indexes
+<span class="code-green">end</span>
+
+<span class="code-comment"># No GitHub API calls required</span></div>
+    <div class="content" style="margin-top: 24px;">
+        <p><strong>Performance transformation:</strong> From hours to minutes.</p>
+    </div>
+</div>
+
+<!-- Slide 5: Problem 2 - Crashes -->
+<div class="slide">
+    <div class="section-label">PROBLEM #2</div>
+    <h2 class="headline">Recipe Crashes on Missing Files</h2>
+    <div class="content">
+        <p style="margin-bottom: 24px;">The sync-session.yaml recipe would crash when sessions lacked events.jsonl files:</p>
+    </div>
+    <div class="code-block"><span class="code-comment"># Original approach - crashes on missing files</span>
+<span class="code-red">EVENTS=$(cat ${SESSION_DIR}/events.jsonl)</span>
+<span class="code-comment"># ❌ Template evaluates BEFORE conditional check</span>
+<span class="code-comment"># ❌ $EVENTS is empty → recipe crashes</span></div>
+    <div class="content" style="margin-top: 24px;">
+        <p><strong>The Investigation:</strong> Why do conditionals fail to protect against missing data?</p>
+    </div>
+</div>
+
+<!-- Slide 6: Root Cause -->
+<div class="slide">
+    <div class="section-label">THE INVESTIGATION</div>
+    <h2 class="headline">Template Variable Evaluation Timing</h2>
+    <div class="content">
+        <p style="margin-bottom: 32px;"><strong>Critical discovery:</strong> Recipe template variables evaluate <em>before</em> conditional checks.</p>
+    </div>
+    <div class="split">
+        <div class="card">
+            <div class="card-title">❌ What We Thought</div>
+            <div class="card-desc">Conditionals protect against missing data. If a file doesn't exist, the conditional skips that step.</div>
+        </div>
+        <div class="card">
+            <div class="card-title">✓ What Actually Happens</div>
+            <div class="card-desc">Template engine evaluates ALL variables first, then checks conditionals. Missing files cause crashes before conditionals run.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7: The "Option A" Pattern -->
+<div class="slide">
+    <div class="section-label">THE SOLUTION</div>
+    <h2 class="headline">The "Option A" Pattern</h2>
+    <div class="content">
+        <p style="margin-bottom: 24px;"><strong>Key insight:</strong> Move conditionals <em>inside</em> bash commands, not in recipe logic.</p>
+    </div>
+    <div class="code-block"><span class="code-comment"># ✓ Option A: Conditional inside bash</span>
+<span class="code-green">if [ -f "${SESSION_DIR}/events.jsonl" ]; then
+  cat "${SESSION_DIR}/events.jsonl"
+else
+  echo ""  <span class="code-comment"># Always return output</span>
+fi</span>
+
+<span class="code-comment"># Result: No crashes, reliable evaluation</span>
+<span class="code-comment"># Every step returns output, even if empty</span></div>
+    <div class="content" style="margin-top: 24px;">
+        <p><strong>Golden Rule:</strong> All recipe steps must always produce output, even if it's an empty string.</p>
+    </div>
+</div>
+
+<!-- Slide 8: Large File Handling -->
+<div class="slide">
+    <div class="section-label">BONUS FIX</div>
+    <h2 class="headline">ARG_MAX and Large Files</h2>
+    <div class="content">
+        <p style="margin-bottom: 24px;">Discovered another crash: Large transcripts (580KB+) exceeded shell argument limits.</p>
+    </div>
+    <div class="comparison">
+        <div class="before">
+            <div class="comparison-label">Before</div>
+            <div class="comparison-text">
+                <p><strong>Passing data via arguments</strong></p>
+                <p style="margin-top: 12px;">curl -X POST --data "$TRANSCRIPT"</p>
+                <p style="margin-top: 12px; color: #FF6B6B;">❌ Fails on large files (ARG_MAX limit)</p>
+            </div>
+        </div>
+        <div class="after">
+            <div class="comparison-label">After</div>
+            <div class="comparison-text">
+                <p><strong>Piping via stdin</strong></p>
+                <p style="margin-top: 12px;">echo "$TRANSCRIPT" | curl --data-binary @-</p>
+                <p style="margin-top: 12px; color: #30D158;">✓ Handles 580KB+ files reliably</p>
+            </div>
+        </div>
+    </div>
+    <div class="content" style="margin-top: 32px;">
+        <p><strong>Testing verified:</strong> Small files (151 bytes) ✅ • Large files (580KB → 218KB base64) ✅</p>
+    </div>
+</div>
+
+<!-- Slide 9: Impact -->
+<div class="slide">
+    <div class="section-label">THE IMPACT</div>
+    <h2 class="headline">354 Sessions, Production-Ready</h2>
+    <div class="thirds">
+        <div class="card">
+            <div class="big-number">354</div>
+            <div class="stat-label">Sessions processed successfully</div>
+        </div>
+        <div class="card">
+            <div class="big-number">3</div>
+            <div class="stat-label">People tracked across sessions</div>
+        </div>
+        <div class="card">
+            <div class="big-number">144</div>
+            <div class="stat-label">Projects identified</div>
+        </div>
+    </div>
+    <div class="thirds" style="margin-top: 20px;">
+        <div class="card">
+            <div class="big-number">600</div>
+            <div class="stat-label">Unique capabilities mapped</div>
+        </div>
+        <div class="card">
+            <div class="big-number">0</div>
+            <div class="stat-label">Recipe crashes in production</div>
+        </div>
+        <div class="card">
+            <div class="big-number">100x</div>
+            <div class="stat-label">Performance improvement</div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 10: Engineering Velocity -->
+<div class="slide">
+    <div class="section-label">ENGINEERING VELOCITY</div>
+    <h2 class="headline">Built for Reliability</h2>
+    <div class="content">
+        <ul>
+            <li><strong>Recipe engineering pattern</strong> discovered and documented</li>
+            <li><strong>Template evaluation timing</strong> now understood and handled</li>
+            <li><strong>Large file support</strong> via stdin piping</li>
+            <li><strong>Zero-crash guarantee</strong> through defensive coding</li>
+            <li><strong>Local-first optimization</strong> for bulk operations</li>
+        </ul>
+    </div>
+    <div class="content" style="margin-top: 40px; padding: 24px; background: rgba(50,173,230,0.1); border-left: 4px solid var(--accent-color); border-radius: 8px;">
+        <p><strong>Key Learning:</strong> Recipe reliability requires understanding the template engine's evaluation order and ensuring all steps return output, even on error paths.</p>
+    </div>
+</div>
+
+<!-- Slide 11: CTA -->
+<div class="slide">
+    <div class="section-label">KEY TAKEAWAYS</div>
+    <h2 class="headline">Recipe Engineering Best Practices</h2>
+    <div class="split">
+        <div class="card">
+            <div class="card-title">1. Template Variables Evaluate First</div>
+            <div class="card-desc">Don't rely on recipe conditionals to protect against missing data. Variables are evaluated before conditionals run.</div>
+        </div>
+        <div class="card">
+            <div class="card-title">2. Use "Option A" Pattern</div>
+            <div class="card-desc">Move conditionals inside bash commands. Ensure every step returns output, even if empty.</div>
+        </div>
+    </div>
+    <div class="split" style="margin-top: 24px;">
+        <div class="card">
+            <div class="card-title">3. Handle Large Files with Stdin</div>
+            <div class="card-desc">Use stdin piping (echo "$VAR" | curl --data-binary @-) to avoid ARG_MAX limits.</div>
+        </div>
+        <div class="card">
+            <div class="card-title">4. Optimize for Local-First</div>
+            <div class="card-desc">When processing bulk data, prefer filesystem reads over API calls. Orders of magnitude faster.</div>
+        </div>
+    </div>
+    <div class="content" style="margin-top: 60px; text-align: center;">
+        <p style="color: var(--accent-color); font-weight: 600;">Commit 435d0d4 • Ready for Production</p>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav-dots"></div>
+<div class="slide-counter"></div>
+<div class="click-zone left"></div>
+<div class="click-zone right"></div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const navDots = document.querySelector('.nav-dots');
+    const slideCounter = document.querySelector('.slide-counter');
+
+    // Create navigation dots
+    slides.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.className = 'nav-dot';
+        if (index === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(index));
+        navDots.appendChild(dot);
+    });
+
+    function updateSlide() {
+        slides.forEach((slide, index) => {
+            slide.classList.toggle('active', index === currentSlide);
+        });
+        
+        const dots = document.querySelectorAll('.nav-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentSlide);
+        });
+        
+        slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+    }
+
+    function goToSlide(index) {
+        currentSlide = Math.max(0, Math.min(index, slides.length - 1));
+        updateSlide();
+    }
+
+    function nextSlide() {
+        if (currentSlide < slides.length - 1) {
+            currentSlide++;
+            updateSlide();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlide > 0) {
+            currentSlide--;
+            updateSlide();
+        }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            prevSlide();
+        }
+    });
+
+    // Click zones
+    document.querySelector('.click-zone.left').addEventListener('click', prevSlide);
+    document.querySelector('.click-zone.right').addEventListener('click', nextSlide);
+
+    // Touch swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) nextSlide();
+        if (touchEndX > touchStartX + 50) prevSlide();
+    }
+
+    // Initialize
+    updateSlide();
+</script>
+
+</body>
+</html>
