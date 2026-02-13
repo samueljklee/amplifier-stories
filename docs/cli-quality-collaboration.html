@@ -7,11 +7,11 @@
     <style>
         :root {
             --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: rgba(255,255,255,0.03);
+            --bg-secondary: #161616;
+            --bg-card: rgba(255,255,255,0.06);
             --text: #ffffff;
             --text-dim: rgba(255,255,255,0.55);
-            --text-muted: rgba(255,255,255,0.35);
+            --text-muted: rgba(255,255,255,0.5);
             --accent: #00D4AA;
             --accent-glow: rgba(0,212,170,0.15);
             --diego-green: #00D4AA;
@@ -25,7 +25,16 @@
             --font-headline: 38px;
             --font-subhead: 20px;
             --font-body: 16px;
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -429,7 +438,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         After <code>uv tool install --force</code>, install-state.json claims modules are installed but Python dependencies are missing.
                     </div>
-                    <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+                    <div style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">
                         Discovered by: Samuel · PR #61
                     </div>
                 </div>
@@ -438,7 +447,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         Self-healing couldn't find the activator — it was hidden inside a wrapped resolver class.
                     </div>
-                    <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+                    <div style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">
                         Discovered by: Diego (building on Samuel's PR #70)
                     </div>
                 </div>
@@ -447,7 +456,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         Configured providers tracked by module ID (<code>provider-anthropic</code>) but loaded tracked by name (<code>anthropic</code>).
                     </div>
-                    <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+                    <div style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">
                         Found during shadow testing
                     </div>
                 </div>
@@ -456,7 +465,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         Branch names with slashes (<code>feat/deep-research</code>) broke URL parsing in foundation.
                     </div>
-                    <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+                    <div style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">
                         Foundation issue #15 · Fixed by Diego
                     </div>
                 </div>
@@ -482,7 +491,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-weight: 600;">PR #61</div>
-                                <div style="font-size: 13px; color: var(--text-dim);">Self-healing for stale install state</div>
+                                <div style="font-size: 14px; color: var(--text-dim);">Self-healing for stale install state</div>
                             </div>
                             <span class="pr-badge merged">MERGED</span>
                         </div>
@@ -492,7 +501,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-weight: 600;">PR #69</div>
-                                <div style="font-size: 13px; color: var(--text-dim);">Correct install-state.json path in reset</div>
+                                <div style="font-size: 14px; color: var(--text-dim);">Correct install-state.json path in reset</div>
                             </div>
                             <span class="pr-badge merged">MERGED</span>
                         </div>
@@ -502,7 +511,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <div style="font-weight: 600;">PR #70</div>
-                                <div style="font-size: 13px; color: var(--text-dim);">Unwrap AppModuleResolver to find activator</div>
+                                <div style="font-size: 14px; color: var(--text-dim);">Unwrap AppModuleResolver to find activator</div>
                             </div>
                             <span class="pr-badge merged">MERGED</span>
                         </div>
@@ -554,7 +563,7 @@
                         <div style="text-align: center; margin-bottom: 16px;">
                             <div style="display: inline-block; background: rgba(255,107,107,0.2); border: 2px solid var(--error-red); border-radius: 8px; padding: 12px 24px;">
                                 <div style="font-weight: 600;">AppModuleResolver</div>
-                                <div style="font-size: 12px; color: var(--text-dim);">No _activator here!</div>
+                                <div style="font-size: 14px; color: var(--text-dim);">No _activator here!</div>
                             </div>
                         </div>
                         
@@ -563,7 +572,7 @@
                         <div style="text-align: center;">
                             <div style="display: inline-block; background: rgba(48,209,88,0.2); border: 2px solid var(--success-green); border-radius: 8px; padding: 12px 24px;">
                                 <div style="font-weight: 600;">BundleModuleResolver</div>
-                                <div style="font-size: 12px; color: var(--success-green);">_activator lives here ✓</div>
+                                <div style="font-size: 14px; color: var(--success-green);">_activator lives here ✓</div>
                             </div>
                         </div>
                     </div>
@@ -585,7 +594,7 @@
                     <img src="https://avatars.githubusercontent.com/u/12657456?v=4" style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--samuel-cyan);">
                     <div>
                         <div style="font-weight: 600; color: var(--samuel-cyan);">Samuel Lee</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">reviewed Diego's PR #71</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">reviewed Diego's PR #71</div>
                     </div>
                 </div>
                 
@@ -672,7 +681,7 @@
                 <div class="card">
                     <div class="card-title">Agent Delegation</div>
                     <div class="terminal" style="margin-top: 12px;">
-                        <div class="terminal-content" style="padding: 16px; font-size: 12px;"><span class="terminal-dim"># Diego's debugging commands:</span>
+                        <div class="terminal-content" style="padding: 16px; font-size: 14px;"><span class="terminal-dim"># Diego's debugging commands:</span>
 
 <span class="terminal-cyan">task(agent="foundation:bug-hunter")</span>
 <span class="terminal-dim">"Investigate transient provider loading failure..."</span>
@@ -688,7 +697,7 @@
                 <div class="card">
                     <div class="card-title">Shadow Environment</div>
                     <div class="terminal" style="margin-top: 12px;">
-                        <div class="terminal-content" style="padding: 16px; font-size: 12px;"><span class="terminal-success">Bug Successfully Reproduced! 🐛</span>
+                        <div class="terminal-content" style="padding: 16px; font-size: 14px;"><span class="terminal-success">Bug Successfully Reproduced! 🐛</span>
 <span class="terminal-dim">Shadow Environment ID: install-state-fix-test</span>
 
 <span class="terminal-dim"># Isolated reproduction without breaking main session</span>
@@ -722,7 +731,7 @@
                     <div class="card bug-card" style="margin-bottom: 20px;">
                         <div class="card-title" style="color: var(--error-red);">The Foundation Bug</div>
                         <div class="terminal" style="margin-top: 12px;">
-                            <div class="terminal-content" style="padding: 16px; font-size: 12px;"><span class="terminal-dim"># This worked:</span>
+                            <div class="terminal-content" style="padding: 16px; font-size: 14px;"><span class="terminal-dim"># This worked:</span>
 <span class="terminal-success">git+https://github.com/user/repo@main</span>
 
 <span class="terminal-dim"># This failed:</span>
@@ -748,8 +757,8 @@
                         <div class="code-new">match = _GIT_REF_PATTERN.match(path)</div>
                     </div>
                     <div style="margin-top: 16px;">
-                        <div style="font-size: 13px; color: var(--text-dim); margin-bottom: 8px;">Improvements:</div>
-                        <ul class="bullet-list" style="font-size: 13px;">
+                        <div style="font-size: 14px; color: var(--text-dim); margin-bottom: 8px;">Improvements:</div>
+                        <ul class="bullet-list" style="font-size: 14px;">
                             <li>Allows slashes in branch names</li>
                             <li>Precompiled regex for performance</li>
                             <li>3 regression tests added</li>
@@ -771,7 +780,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         Don't use <code>re.match()</code> inline — creates regex object on every call. Precompile instead.
                     </div>
-                    <div style="margin-top: 12px; padding: 8px; background: rgba(48,209,88,0.1); border-radius: 6px; font-size: 12px; color: var(--success-green);">
+                    <div style="margin-top: 12px; padding: 8px; background: rgba(48,209,88,0.1); border-radius: 6px; font-size: 14px; color: var(--success-green);">
                         Fixed in foundation PR #45
                     </div>
                 </div>
@@ -781,7 +790,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         Configured providers tracked by module ID, loaded by name. Use consistent naming across the system.
                     </div>
-                    <div style="margin-top: 12px; padding: 8px; background: rgba(48,209,88,0.1); border-radius: 6px; font-size: 12px; color: var(--success-green);">
+                    <div style="margin-top: 12px; padding: 8px; background: rgba(48,209,88,0.1); border-radius: 6px; font-size: 14px; color: var(--success-green);">
                         Fixed in CLI PR #71
                     </div>
                 </div>
@@ -791,7 +800,7 @@
                     <div style="font-size: 14px; color: var(--text-dim);">
                         Always check if classes wrap underlying implementations. The thing you need might be hidden inside.
                     </div>
-                    <div style="margin-top: 12px; padding: 8px; background: rgba(48,209,88,0.1); border-radius: 6px; font-size: 12px; color: var(--success-green);">
+                    <div style="margin-top: 12px; padding: 8px; background: rgba(48,209,88,0.1); border-radius: 6px; font-size: 14px; color: var(--success-green);">
                         Unwrapping pattern now documented
                     </div>
                 </div>
@@ -848,7 +857,7 @@
                 <div class="card fix-card">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                         <div>
-                            <div style="font-size: 12px; color: var(--text-muted);">amplifier-app-cli</div>
+                            <div style="font-size: 14px; color: var(--text-muted);">amplifier-app-cli</div>
                             <div style="font-size: 20px; font-weight: 700; color: var(--success-green);">PR #71</div>
                         </div>
                         <span class="pr-badge open">OPEN</span>
@@ -857,14 +866,14 @@
                     <div style="display: flex; gap: 20px; margin-bottom: 16px;">
                         <div>
                             <div style="font-size: 24px; font-weight: 700; color: var(--success-green);">+111</div>
-                            <div style="font-size: 11px; color: var(--text-dim);">lines</div>
+                            <div style="font-size: 14px; color: var(--text-dim);">lines</div>
                         </div>
                         <div>
                             <div style="font-size: 24px; font-weight: 700; color: var(--microsoft-blue);">4</div>
-                            <div style="font-size: 11px; color: var(--text-dim);">files</div>
+                            <div style="font-size: 14px; color: var(--text-dim);">files</div>
                         </div>
                     </div>
-                    <div style="font-size: 13px; color: var(--text-dim);">
+                    <div style="font-size: 14px; color: var(--text-dim);">
                         init.py · run.py · session_runner.py · session_spawner.py
                     </div>
                 </div>
@@ -872,7 +881,7 @@
                 <div class="card fix-card">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                         <div>
-                            <div style="font-size: 12px; color: var(--text-muted);">amplifier-foundation</div>
+                            <div style="font-size: 14px; color: var(--text-muted);">amplifier-foundation</div>
                             <div style="font-size: 20px; font-weight: 700; color: var(--purple);">PR #45</div>
                         </div>
                         <span class="pr-badge merged">MERGED</span>
@@ -881,18 +890,18 @@
                     <div style="display: flex; gap: 20px; margin-bottom: 16px;">
                         <div>
                             <div style="font-size: 24px; font-weight: 700; color: var(--success-green);">+80</div>
-                            <div style="font-size: 11px; color: var(--text-dim);">lines</div>
+                            <div style="font-size: 14px; color: var(--text-dim);">lines</div>
                         </div>
                         <div>
                             <div style="font-size: 24px; font-weight: 700; color: var(--microsoft-blue);">2</div>
-                            <div style="font-size: 11px; color: var(--text-dim);">files</div>
+                            <div style="font-size: 14px; color: var(--text-dim);">files</div>
                         </div>
                         <div>
                             <div style="font-size: 24px; font-weight: 700; color: var(--accent);">258</div>
-                            <div style="font-size: 11px; color: var(--text-dim);">tests pass</div>
+                            <div style="font-size: 14px; color: var(--text-dim);">tests pass</div>
                         </div>
                     </div>
-                    <div style="font-size: 13px; color: var(--text-dim);">
+                    <div style="font-size: 14px; color: var(--text-dim);">
                         resolution.py · test_paths.py
                     </div>
                 </div>
@@ -950,13 +959,13 @@
                     <div style="flex: 1; background: rgba(255,107,107,0.1); border: 2px solid var(--error-red); border-radius: 12px; padding: 16px; text-align: center;">
                         <div style="font-size: 24px; margin-bottom: 4px;">🐛</div>
                         <div style="font-weight: 600;">Bug Discovered</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Real-world error</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">Real-world error</div>
                     </div>
                     <div style="font-size: 28px; color: var(--accent);">→</div>
                     <div style="flex: 1; background: rgba(0,206,209,0.1); border: 2px solid var(--samuel-cyan); border-radius: 12px; padding: 16px; text-align: center;">
                         <div style="font-size: 24px; margin-bottom: 4px;">🔍</div>
                         <div style="font-weight: 600;">Check Team's Work</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Samuel's PRs found</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">Samuel's PRs found</div>
                     </div>
                 </div>
                 
@@ -966,13 +975,13 @@
                     <div style="flex: 1; background: rgba(0,212,170,0.1); border: 2px solid var(--diego-green); border-radius: 12px; padding: 16px; text-align: center;">
                         <div style="font-size: 24px; margin-bottom: 4px;">🧪</div>
                         <div style="font-weight: 600;">Shadow Testing</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Isolated reproduction</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">Isolated reproduction</div>
                     </div>
                     <div style="font-size: 28px; color: var(--accent);">→</div>
                     <div style="flex: 1; background: rgba(123,104,238,0.1); border: 2px solid var(--purple); border-radius: 12px; padding: 16px; text-align: center;">
                         <div style="font-size: 24px; margin-bottom: 4px;">🤖</div>
                         <div style="font-weight: 600;">Agent Analysis</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">bug-hunter, explorer</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">bug-hunter, explorer</div>
                     </div>
                 </div>
                 
@@ -982,13 +991,13 @@
                     <div style="flex: 1; background: rgba(255,159,10,0.1); border: 2px solid var(--warning-orange); border-radius: 12px; padding: 16px; text-align: center;">
                         <div style="font-size: 24px; margin-bottom: 4px;">📝</div>
                         <div style="font-weight: 600;">PR + Code Review</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Catches regressions</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">Catches regressions</div>
                     </div>
                     <div style="font-size: 28px; color: var(--accent);">→</div>
                     <div style="flex: 1; background: rgba(48,209,88,0.1); border: 2px solid var(--success-green); border-radius: 12px; padding: 16px; text-align: center;">
                         <div style="font-size: 24px; margin-bottom: 4px;">✅</div>
                         <div style="font-weight: 600;">Merged</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">System improved</div>
+                        <div style="font-size: 14px; color: var(--text-dim);">System improved</div>
                     </div>
                 </div>
             </div>
@@ -1041,19 +1050,19 @@
                 <div style="text-align: center;">
                     <img src="https://avatars.githubusercontent.com/u/12657456?v=4" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--samuel-cyan);">
                     <div style="font-size: 14px; color: var(--samuel-cyan); margin-top: 8px; font-weight: 600;">Samuel</div>
-                    <div style="font-size: 12px; color: var(--text-dim);">Foundation layer</div>
+                    <div style="font-size: 14px; color: var(--text-dim);">Foundation layer</div>
                 </div>
                 <div style="font-size: 32px; color: var(--accent);">+</div>
                 <div style="text-align: center;">
                     <img src="https://avatars.githubusercontent.com/u/375556?v=4" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--diego-green);">
                     <div style="font-size: 14px; color: var(--diego-green); margin-top: 8px; font-weight: 600;">Diego</div>
-                    <div style="font-size: 12px; color: var(--text-dim);">Extension & completion</div>
+                    <div style="font-size: 14px; color: var(--text-dim);">Extension & completion</div>
                 </div>
                 <div style="font-size: 32px; color: var(--accent);">+</div>
                 <div style="text-align: center;">
                     <div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); background: rgba(0,212,170,0.1); display: flex; align-items: center; justify-content: center; font-size: 32px;">🤖</div>
                     <div style="font-size: 14px; color: var(--accent); margin-top: 8px; font-weight: 600;">Amplifier</div>
-                    <div style="font-size: 12px; color: var(--text-dim);">Investigation & testing</div>
+                    <div style="font-size: 14px; color: var(--text-dim);">Investigation & testing</div>
                 </div>
             </div>
             

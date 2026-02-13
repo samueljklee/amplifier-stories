@@ -20,6 +20,15 @@
     --font-big-number: clamp(60px, 20vw, 180px);
     --padding-slide: clamp(20px, 5vw, 80px);
     --gap-grid: clamp(16px, 3vw, 40px);
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -397,13 +406,13 @@ body {
     <div class="section-label">Amplifier Architecture</div>
     <div class="headline" style="margin-bottom: 32px;">
         Polyglot Amplifier<br>
-        <span style="color: rgba(255,255,255,0.4);">From Python to Rust</span><br>
-        <span style="color: rgba(255,255,255,0.25);">(and Beyond)</span>
+        <span style="color: rgba(255,255,255,0.5);">From Python to Rust</span><br>
+        <span style="color: rgba(255,255,255,0.5);">(and Beyond)</span>
     </div>
     <div class="subhead" style="max-width: 650px;">
         How a language-agnostic LSP architecture turned a Python tool into a polyglot code intelligence platform.
     </div>
-    <div style="margin-top: 48px; font-size: 14px; color: rgba(255,255,255,0.3);">
+    <div style="margin-top: 48px; font-size: 14px; color: rgba(255,255,255,0.5);">
         February 2026
     </div>
 </div>
@@ -421,16 +430,16 @@ body {
     </div>
     <div class="halves">
         <div class="card" style="border-color: rgba(255,55,95,0.2);">
-            <div class="card-title" style="color: rgba(255,255,255,0.4);">Before: Text Search</div>
+            <div class="card-title" style="color: rgba(255,255,255,0.5);">Before: Text Search</div>
             <div class="code-block" style="margin-top: 12px;">
 <span class="code-gray"># grep "authenticate" across 500 files</span>
 <span class="code-gray"># matches comments, strings, variable names</span>
 <span class="code-gray"># no type info, no call chains</span>
 <span class="code-gray"># false positives everywhere</span>
-<span style="color: rgba(255,255,255,0.3);">$ grep -r "authenticate" src/</span>
-<span style="color: rgba(255,255,255,0.25);">auth.py:  # authenticate the user</span>
-<span style="color: rgba(255,255,255,0.25);">test.py:  name = "authenticate_test"</span>
-<span style="color: rgba(255,255,255,0.25);">docs.md:  Call authenticate() to...</span></div>
+<span style="color: rgba(255,255,255,0.5);">$ grep -r "authenticate" src/</span>
+<span style="color: rgba(255,255,255,0.5);">auth.py:  # authenticate the user</span>
+<span style="color: rgba(255,255,255,0.5);">test.py:  name = "authenticate_test"</span>
+<span style="color: rgba(255,255,255,0.5);">docs.md:  Call authenticate() to...</span></div>
         </div>
         <div class="card" style="border-color: rgba(48,209,88,0.3);">
             <div class="card-title"><span class="green">After: Semantic Understanding</span></div>
@@ -464,7 +473,7 @@ body {
     </div>
     <div class="halves" style="max-width: 900px;">
         <div class="card" style="text-align: center;">
-            <div style="font-size: clamp(40px, 10vw, 80px); font-weight: 800; color: rgba(255,255,255,0.15); letter-spacing: -2px;">M &times; N</div>
+            <div style="font-size: clamp(40px, 10vw, 80px); font-weight: 800; color: rgba(255,255,255,0.5); letter-spacing: -2px;">M &times; N</div>
             <div class="card-desc" style="margin-top: 8px;">Traditional: Custom integration<br>for every language &times; every tool</div>
         </div>
         <div class="card" style="text-align: center; border-color: rgba(48,209,88,0.3);">
@@ -490,29 +499,29 @@ body {
         <!-- Language bundles -->
         <div class="thirds" style="margin-bottom: 8px;">
             <div class="arch-box" style="border-color: var(--python);">
-                <div style="font-size: 13px; color: var(--python); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">lsp-python</div>
-                <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px;">languages.python: { ... }</div>
+                <div style="font-size: 14px; color: var(--python); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">lsp-python</div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px;">languages.python: { ... }</div>
             </div>
             <div class="arch-box" style="border-color: var(--rust);">
-                <div style="font-size: 13px; color: var(--rust); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">lsp-rust</div>
-                <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px;">languages.rust: { ... }</div>
+                <div style="font-size: 14px; color: var(--rust); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">lsp-rust</div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px;">languages.rust: { ... }</div>
             </div>
             <div class="arch-box" style="border-color: var(--typescript);">
-                <div style="font-size: 13px; color: var(--typescript); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">lsp-typescript</div>
-                <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px;">languages.typescript: { ... }</div>
+                <div style="font-size: 14px; color: var(--typescript); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">lsp-typescript</div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px;">languages.typescript: { ... }</div>
             </div>
         </div>
         <div class="merge-label">&#x25BC; deep merge</div>
         <!-- Core -->
         <div class="arch-box arch-box-accent" style="margin-bottom: 8px;">
             <div style="font-size: 14px; font-weight: 600; color: var(--accent);">lsp-core behavior</div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px;">tool-lsp &middot; config: { languages: {} }</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px;">tool-lsp &middot; config: { languages: {} }</div>
         </div>
         <div class="merge-label">&#x25BC; powers</div>
         <!-- Module -->
         <div class="arch-box" style="border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.03);">
             <div style="font-size: 14px; font-weight: 600;">tool-lsp module</div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px;">17 operations &middot; persistent proxy &middot; zero language knowledge in code</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px;">17 operations &middot; persistent proxy &middot; zero language knowledge in code</div>
         </div>
     </div>
 </div>
@@ -546,7 +555,7 @@ body {
             <span class="code-purple">customRequest:</span> <span class="code-green">true</span>
           <span class="code-purple">initialization_options:</span>
             <span class="code-purple">checkOnSave.command:</span> <span class="code-blue">clippy</span></div>
-    <div style="margin-top: 16px; font-size: 14px; color: rgba(255,255,255,0.4); max-width: 700px;">
+    <div style="margin-top: 16px; font-size: 14px; color: rgba(255,255,255,0.5); max-width: 700px;">
         No code changes. No new modules. Just a YAML file that deep-merges into tool-lsp's config. The module reads the config, spawns rust-analyzer, and exposes all 17 operations.
     </div>
 </div>
@@ -561,7 +570,7 @@ body {
     </div>
     <div style="margin-bottom: 32px;">
         <span class="tag tag-mature">Mature</span>
-        <span style="font-size: 14px; color: rgba(255,255,255,0.4); margin-left: 12px;">Since December 2025 &middot; Pyright-based</span>
+        <span style="font-size: 14px; color: rgba(255,255,255,0.5); margin-left: 12px;">Since December 2025 &middot; Pyright-based</span>
     </div>
     <div class="thirds">
         <div class="card">
@@ -580,7 +589,7 @@ body {
             <div class="card-desc">python_check combines Ruff (formatting + linting) with Pyright (type checking). Diagnostics surface errors before runtime.</div>
         </div>
     </div>
-    <div style="margin-top: 24px; font-size: 14px; color: rgba(255,255,255,0.35);">
+    <div style="margin-top: 24px; font-size: 14px; color: rgba(255,255,255,0.5);">
         amplifier-bundle-lsp-python &middot; microsoft/amplifier-bundle-lsp-python
     </div>
 </div>
@@ -595,7 +604,7 @@ body {
     </div>
     <div style="margin-bottom: 32px;">
         <span class="tag tag-new">New &mdash; Feb 2026</span>
-        <span style="font-size: 14px; color: rgba(255,255,255,0.4); margin-left: 12px;">rust-analyzer based</span>
+        <span style="font-size: 14px; color: rgba(255,255,255,0.5); margin-left: 12px;">rust-analyzer based</span>
     </div>
     <div class="halves">
         <div>
@@ -611,17 +620,17 @@ body {
         <div class="card" style="align-self: stretch;">
             <div class="card-title" style="margin-bottom: 16px;">Custom Extensions</div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="capability-item"><span class="code-orange">expandMacro</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; Expand derive/proc macros</span></div>
-                <div class="capability-item"><span class="code-orange">relatedTests</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; Find tests for a function</span></div>
-                <div class="capability-item"><span class="code-orange">externalDocs</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; Get docs.rs links</span></div>
-                <div class="capability-item"><span class="code-orange">runnables</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; List runnable targets</span></div>
-                <div class="capability-item"><span class="code-orange">fetchDependencyList</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; Crate dependencies</span></div>
-                <div class="capability-item"><span class="code-orange">ssr</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; Structural search &amp; replace</span></div>
-                <div class="capability-item"><span class="code-orange">memoryLayout</span><span class="dim" style="font-size: 12px;">&nbsp;&mdash; Inspect struct layout</span></div>
+                <div class="capability-item"><span class="code-orange">expandMacro</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; Expand derive/proc macros</span></div>
+                <div class="capability-item"><span class="code-orange">relatedTests</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; Find tests for a function</span></div>
+                <div class="capability-item"><span class="code-orange">externalDocs</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; Get docs.rs links</span></div>
+                <div class="capability-item"><span class="code-orange">runnables</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; List runnable targets</span></div>
+                <div class="capability-item"><span class="code-orange">fetchDependencyList</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; Crate dependencies</span></div>
+                <div class="capability-item"><span class="code-orange">ssr</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; Structural search &amp; replace</span></div>
+                <div class="capability-item"><span class="code-orange">memoryLayout</span><span class="dim" style="font-size: 14px;">&nbsp;&mdash; Inspect struct layout</span></div>
             </div>
         </div>
     </div>
-    <div style="margin-top: 24px; font-size: 14px; color: rgba(255,255,255,0.35);">
+    <div style="margin-top: 24px; font-size: 14px; color: rgba(255,255,255,0.5);">
         amplifier-bundle-lsp-rust &middot; microsoft/amplifier-bundle-lsp-rust &middot; Created Feb 10, 2026
     </div>
 </div>
@@ -636,7 +645,7 @@ body {
     </div>
     <div style="margin-bottom: 32px;">
         <span class="tag tag-community">Community</span>
-        <span style="font-size: 14px; color: rgba(255,255,255,0.4); margin-left: 12px;">by robotdad &middot; typescript-language-server</span>
+        <span style="font-size: 14px; color: rgba(255,255,255,0.5); margin-left: 12px;">by robotdad &middot; typescript-language-server</span>
     </div>
     <div class="halves">
         <div>
@@ -654,15 +663,15 @@ body {
             <div class="body-text" style="max-width: none; font-size: clamp(13px, 1.8vw, 16px);">
                 <p style="margin-bottom: 12px; color: rgba(255,255,255,0.7);">robotdad followed the same bundle pattern used by the official Python and Rust bundles:</p>
                 <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px;">
-                    <div><span style="color: rgba(255,255,255,0.3); min-width: 24px; display: inline-block;">1.</span> <span style="color: rgba(255,255,255,0.6);">Behavior YAML with language config</span></div>
-                    <div><span style="color: rgba(255,255,255,0.3); min-width: 24px; display: inline-block;">2.</span> <span style="color: rgba(255,255,255,0.6);">Specialized code-intel agent</span></div>
-                    <div><span style="color: rgba(255,255,255,0.3); min-width: 24px; display: inline-block;">3.</span> <span style="color: rgba(255,255,255,0.6);">Language-specific context file</span></div>
+                    <div><span style="color: rgba(255,255,255,0.5); min-width: 24px; display: inline-block;">1.</span> <span style="color: rgba(255,255,255,0.6);">Behavior YAML with language config</span></div>
+                    <div><span style="color: rgba(255,255,255,0.5); min-width: 24px; display: inline-block;">2.</span> <span style="color: rgba(255,255,255,0.6);">Specialized code-intel agent</span></div>
+                    <div><span style="color: rgba(255,255,255,0.5); min-width: 24px; display: inline-block;">3.</span> <span style="color: rgba(255,255,255,0.6);">Language-specific context file</span></div>
                 </div>
                 <p style="margin-top: 16px; color: var(--accent); font-weight: 500; font-size: 14px;">The architecture made it possible for a community member to add a new language without touching Amplifier's core.</p>
             </div>
         </div>
     </div>
-    <div style="margin-top: 24px; font-size: 14px; color: rgba(255,255,255,0.35);">
+    <div style="margin-top: 24px; font-size: 14px; color: rgba(255,255,255,0.5);">
         robotdad/amplifier-bundle-lsp-typescript &middot; Created Jan 4, 2026
     </div>
 </div>
@@ -734,7 +743,7 @@ body {
     </div>
     <div class="halves" style="max-width: 950px;">
         <div>
-            <div style="font-size: 13px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Navigation (always on)</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Navigation (always on)</div>
             <div style="display: flex; flex-direction: column; gap: 6px;">
                 <div class="capability-item"><span class="capability-dot" style="background: var(--green);"></span> goToDefinition</div>
                 <div class="capability-item"><span class="capability-dot" style="background: var(--green);"></span> findReferences</div>
@@ -748,7 +757,7 @@ body {
             </div>
         </div>
         <div>
-            <div style="font-size: 13px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Extended (per-capability)</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Extended (per-capability)</div>
             <div style="display: flex; flex-direction: column; gap: 6px;">
                 <div class="capability-item"><span class="capability-dot" style="background: #64D2FF;"></span> prepareTypeHierarchy</div>
                 <div class="capability-item"><span class="capability-dot" style="background: #64D2FF;"></span> supertypes</div>
@@ -757,8 +766,8 @@ body {
                 <div class="capability-item"><span class="capability-dot" style="background: #FF9F0A;"></span> rename</div>
                 <div class="capability-item"><span class="capability-dot" style="background: #FF9F0A;"></span> codeAction</div>
                 <div class="capability-item"><span class="capability-dot" style="background: #FF9F0A;"></span> inlayHints</div>
-                <div style="margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Extension</div>
-                <div class="capability-item"><span class="capability-dot" style="background: #BF5AF2;"></span> customRequest <span class="dim" style="font-size: 11px;">&mdash; server-specific methods</span></div>
+                <div style="margin-top: 12px; font-size: 14px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Extension</div>
+                <div class="capability-item"><span class="capability-dot" style="background: #BF5AF2;"></span> customRequest <span class="dim" style="font-size: 14px;">&mdash; server-specific methods</span></div>
             </div>
         </div>
     </div>
@@ -880,26 +889,26 @@ body {
     <div class="section-label">What's Next</div>
     <div class="headline" style="margin-bottom: 32px;">
         Any language.<br>
-        <span style="color: rgba(255,255,255,0.4);">Same power.</span>
+        <span style="color: rgba(255,255,255,0.5);">Same power.</span>
     </div>
     <div class="subhead" style="margin-bottom: 40px;">
         Every language with an LSP server is a candidate. The pattern is proven. The community is already contributing.
     </div>
     <div class="thirds" style="max-width: 900px;">
         <div class="card" style="border-color: rgba(255,255,255,0.08);">
-            <div class="card-title" style="color: rgba(255,255,255,0.3);">Go</div>
+            <div class="card-title" style="color: rgba(255,255,255,0.5);">Go</div>
             <div class="card-desc">gopls is mature and widely deployed. Full type hierarchy and call graph support.</div>
         </div>
         <div class="card" style="border-color: rgba(255,255,255,0.08);">
-            <div class="card-title" style="color: rgba(255,255,255,0.3);">C / C++</div>
+            <div class="card-title" style="color: rgba(255,255,255,0.5);">C / C++</div>
             <div class="card-desc">clangd provides rich semantic understanding. Large-scale codebases would benefit most.</div>
         </div>
         <div class="card" style="border-color: rgba(255,255,255,0.08);">
-            <div class="card-title" style="color: rgba(255,255,255,0.3);">Java / Kotlin</div>
+            <div class="card-title" style="color: rgba(255,255,255,0.5);">Java / Kotlin</div>
             <div class="card-desc">Eclipse JDT LS and kotlin-language-server cover the JVM ecosystem.</div>
         </div>
     </div>
-    <div style="margin-top: 32px; font-size: 16px; color: rgba(255,255,255,0.4);">
+    <div style="margin-top: 32px; font-size: 16px; color: rgba(255,255,255,0.5);">
         Adding any of these: write one YAML file, one agent description, one context doc. Done.
     </div>
 </div>
@@ -908,7 +917,7 @@ body {
 <!-- SLIDE 15: CTA -->
 <!-- ============================================================ -->
 <div class="slide" id="slide-15">
-    <div class="bg-glow" style="background: var(--accent); top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; opacity: 0.05;"></div>
+    <div class="bg-glow" style="background: var(--accent); top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; opacity: 0.5;"></div>
     <div style="text-align: center; max-width: 800px; margin: 0 auto;">
         <div class="section-label" style="margin-bottom: 24px;">Get Started</div>
         <div class="headline" style="margin-bottom: 32px;">
@@ -921,7 +930,7 @@ body {
         <div class="thirds" style="max-width: 750px; margin: 0 auto;">
             <div class="card" style="text-align: center;">
                 <div class="card-title" style="color: var(--accent);">Use It</div>
-                <div class="card-desc" style="font-family: 'SF Mono', monospace; font-size: 13px; margin-top: 8px;">
+                <div class="card-desc" style="font-family: 'SF Mono', monospace; font-size: 14px; margin-top: 8px;">
                     includes:<br>
                     &nbsp;&nbsp;- bundle: lsp-python<br>
                     &nbsp;&nbsp;- bundle: lsp-rust
@@ -933,7 +942,7 @@ body {
             </div>
             <div class="card" style="text-align: center;">
                 <div class="card-title" style="color: #BF5AF2;">Explore It</div>
-                <div class="card-desc" style="font-family: 'SF Mono', monospace; font-size: 13px; margin-top: 8px;">
+                <div class="card-desc" style="font-family: 'SF Mono', monospace; font-size: 14px; margin-top: 8px;">
                     github.com/microsoft/<br>amplifier-bundle-lsp-*
                 </div>
             </div>

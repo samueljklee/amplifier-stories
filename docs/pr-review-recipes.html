@@ -17,13 +17,22 @@
             --bg: #0D0D0D;
             --text: #FFFFFF;
             --text-secondary: #8E8E93;
-            --text-dim: #636366;
+            --text-dim: #747476;
             --surface: #1C1C1E;
             --surface-elevated: #2C2C2E;
             --success: #30D158;
             --warning: #FFD60A;
             --error: #FF453A;
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         @font-face {
             font-family: 'SF Pro Display';
@@ -126,7 +135,7 @@
         }
 
         .slide.title .date {
-            font-size: 24px;
+            font-size: 28px;
             color: var(--text-dim);
             margin-top: 48px;
         }
@@ -830,7 +839,7 @@
                     <div class="step-text">Repeat</div>
                 </div>
             </div>
-            <p style="margin-top: 60px; text-align: center; font-size: 24px;">Not a failure. A feedback loop.</p>
+            <p style="margin-top: 60px; text-align: center; font-size: 28px;">Not a failure. A feedback loop.</p>
         </div>
 
         <!-- Slide 12: CTA -->

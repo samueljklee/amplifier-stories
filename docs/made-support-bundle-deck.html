@@ -12,7 +12,7 @@
             --text: #fff;
             --text-dim: rgba(255, 255, 255, 0.6);
             --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --card-border: rgba(255,255,255,0.12);
             
             /* Fluid typography */
             --font-headline: clamp(36px, 8vw, 72px);
@@ -24,7 +24,16 @@
             /* Fluid spacing */
             --padding-slide: clamp(24px, 6vw, 80px);
             --gap-grid: clamp(16px, 3vw, 32px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * {
             margin: 0;

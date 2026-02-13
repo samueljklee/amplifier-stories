@@ -11,14 +11,23 @@
             --accent-glow: rgba(48, 209, 88, 0.3);
             --bg: #0a0a0a;
             --card-bg: rgba(255,255,255,0.05);
-            --card-border: rgba(255,255,255,0.1);
+            --card-border: rgba(255,255,255,0.12);
             --text: #fff;
             --text-dim: rgba(255,255,255,0.6);
             --warning: #FF9F0A;
             --purple: #9B7BFF;
             --blue: #0078D4;
             --cyan: #00CED1;
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -183,7 +192,7 @@
         .bundle-layer.tertiary { border-color: var(--cyan); }
         
         .bundle-icon {
-            font-size: 24px;
+            font-size: 28px;
             width: 40px;
             text-align: center;
         }

@@ -27,7 +27,16 @@
             --color-success: #30D158;
             --color-warning: #FFD60A;
             --color-error: #FF453A;
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
@@ -674,7 +683,7 @@
                     </div>
                     <div class="tradeoff-bar" style="max-width: 100%;">
                         <div class="tradeoff-segment" style="flex: 30; background: var(--color-success);">unique</div>
-                        <div class="tradeoff-segment" style="flex: 30; background: var(--color-warning); color: #000;">mixed</div>
+                        <div class="tradeoff-segment" style="flex: 30; background: var(--color-warning); color: #757575;">mixed</div>
                         <div class="tradeoff-segment" style="flex: 78; background: var(--color-error);">overlap</div>
                     </div>
                 </div>

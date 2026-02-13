@@ -13,7 +13,7 @@
             --text: #fff;
             --text-dim: rgba(255,255,255,0.6);
             --card-bg: rgba(255,255,255,0.05);
-            --card-border: rgba(255,255,255,0.1);
+            --card-border: rgba(255,255,255,0.12);
             --code-green: #4ADE80;
             --code-blue: #60A5FA;
             --code-yellow: #FBBF24;
@@ -28,7 +28,16 @@
             
             --padding-slide: clamp(24px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 32px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -811,7 +820,7 @@ You are an AI assistant with...
                     <div class="card-desc">
                         Inherit from foundation, add only unique capabilities. Never duplicate tools/session/hooks that foundation provides.
                     </div>
-                    <div class="code-block" style="margin-top: 16px; font-size: 11px;"><span class="keyword">includes</span>:
+                    <div class="code-block" style="margin-top: 16px; font-size: 14px;"><span class="keyword">includes</span>:
   - <span class="type">bundle</span>: <span class="string">foundation</span>
   - <span class="type">bundle</span>: <span class="string">mine:behaviors/x</span></div>
                 </div>
@@ -820,7 +829,7 @@ You are an AI assistant with...
                     <div class="card-desc">
                         Heavy docs live in agent files (loaded only when spawned). Behaviors stay thin with awareness pointers.
                     </div>
-                    <div class="code-block" style="margin-top: 16px; font-size: 11px;"><span class="comment"># Behavior: 30 lines awareness</span>
+                    <div class="code-block" style="margin-top: 16px; font-size: 14px;"><span class="comment"># Behavior: 30 lines awareness</span>
 <span class="comment"># Agent: @bundle:docs/GUIDE.md</span>
 <span class="comment"># Loads only when spawned!</span></div>
                 </div>
@@ -829,7 +838,7 @@ You are an AI assistant with...
                     <div class="card-desc">
                         Spawn child sessions for focused tasks. Control context depth and scope. Parent awaits result.
                     </div>
-                    <div class="code-block" style="margin-top: 16px; font-size: 11px;"><span class="keyword">await</span> bundle.<span class="func">spawn</span>(
+                    <div class="code-block" style="margin-top: 16px; font-size: 14px;"><span class="keyword">await</span> bundle.<span class="func">spawn</span>(
     child_bundle,
     instruction=<span class="string">"..."</span>
 )</div>

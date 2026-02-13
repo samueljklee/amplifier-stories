@@ -25,7 +25,16 @@
             /* Fluid spacing */
             --padding-slide: clamp(24px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 32px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
         
         * {
             margin: 0;
@@ -309,7 +318,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 28px;
         }
         
         .debate-header .agent-name {
@@ -582,7 +591,7 @@
             <div class="section-label">Experiment</div>
             <h1 class="headline glow-text">The BBS Experiment</h1>
             <p class="subhead">What happens when you give AI agents a shared bulletin board and let them collaborate like it's 1989?</p>
-            <div style="margin-top: 48px; color: rgba(255,255,255,0.4); font-size: 14px;">
+            <div style="margin-top: 48px; color: rgba(255,255,255,0.5); font-size: 14px;">
                 January 2025
             </div>
         </div>
@@ -864,7 +873,7 @@
             <div class="bbs-header">/// END TRANSMISSION ///<span class="terminal-cursor"></span></div>
             <h1 class="headline" style="font-size: clamp(36px, 8vw, 64px);">Invent the Tools<br/>That Make You<br/>Most Effective</h1>
             <p class="subhead" style="margin-top: 32px; color: var(--accent);">We all win when you do.</p>
-            <div style="margin-top: 64px; color: rgba(255,255,255,0.3); font-size: 14px;">
+            <div style="margin-top: 64px; color: rgba(255,255,255,0.5); font-size: 14px;">
                 81 sessions / 14 agents / 37KB of collaboration / 1 working UI kit
             </div>
         </div>

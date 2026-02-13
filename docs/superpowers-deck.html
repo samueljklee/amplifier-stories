@@ -14,7 +14,7 @@
     --text-dim: rgba(255,255,255,0.5);
     --text-mid: rgba(255,255,255,0.7);
     --card-bg: rgba(255,255,255,0.05);
-    --card-border: rgba(255,255,255,0.1);
+    --card-border: rgba(255,255,255,0.12);
     --green: #30D158;
     --red: #FF453A;
     --orange: #FF9F0A;
@@ -31,6 +31,15 @@
     --font-big-number: clamp(48px, 15vw, 140px);
     --padding-slide: clamp(24px, 5vw, 80px);
     --gap-grid: clamp(16px, 2.5vw, 32px);
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -829,7 +838,7 @@ body {
         <div class="card">
             <div class="card-title">Recipe Track</div>
             <div class="card-desc" style="line-height: 1.7; margin-top: 8px;">
-                Autopilot. The <span class="mono" style="font-size: 12px;">full-development-cycle</span> recipe runs all phases with approval gates. You approve at checkpoints. Best for: well-understood features, batch work.
+                Autopilot. The <span class="mono" style="font-size: 14px;">full-development-cycle</span> recipe runs all phases with approval gates. You approve at checkpoints. Best for: well-understood features, batch work.
             </div>
         </div>
     </div>
@@ -1036,7 +1045,7 @@ body {
             <div class="card" style="padding: clamp(12px, 2vw, 20px);">
                 <div class="card-title" style="font-size: var(--font-small);">Full bundle available</div>
                 <div class="card-desc" style="margin-top: 4px;">
-                    Want modes, recipes, and skills too? Install the full bundle with <span class="mono" style="font-size: 11px;">amplifier bundle add --app ...@main</span>.
+                    Want modes, recipes, and skills too? Install the full bundle with <span class="mono" style="font-size: 14px;">amplifier bundle add --app ...@main</span>.
                 </div>
             </div>
         </div>

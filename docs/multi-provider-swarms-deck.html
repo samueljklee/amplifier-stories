@@ -12,9 +12,9 @@
     --bg: #000;
     --text: #fff;
     --text-secondary: rgba(255,255,255,0.6);
-    --text-tertiary: rgba(255,255,255,0.4);
+    --text-tertiary: rgba(255,255,255,0.5);
     --card-bg: rgba(255,255,255,0.05);
-    --card-border: rgba(255,255,255,0.1);
+    --card-border: rgba(255,255,255,0.12);
     --code-bg: rgba(255,255,255,0.05);
     --green: #30D158;
     --blue: #0A84FF;
@@ -31,6 +31,15 @@
     --font-big-number: clamp(60px, 20vw, 180px);
     --padding-slide: clamp(20px, 5vw, 80px);
     --gap-grid: clamp(16px, 3vw, 40px);
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -672,16 +681,16 @@ body {
     <div class="convergence-container">
         <div class="provider-inputs">
             <div class="provider-input" style="background: rgba(10,132,255,0.15); border: 1px solid var(--blue);">
-                Claude Opus<br><span style="font-size: 12px; color: var(--text-secondary);">Approach A</span>
+                Claude Opus<br><span style="font-size: 14px; color: var(--text-secondary);">Approach A</span>
             </div>
             <div class="provider-input" style="background: rgba(48,209,88,0.15); border: 1px solid var(--green);">
-                GPT-5<br><span style="font-size: 12px; color: var(--text-secondary);">Approach A</span>
+                GPT-5<br><span style="font-size: 14px; color: var(--text-secondary);">Approach A</span>
             </div>
             <div class="provider-input" style="background: rgba(255,159,10,0.15); border: 1px solid var(--orange);">
-                Gemini 3 Pro<br><span style="font-size: 12px; color: var(--text-secondary);">Approach A</span>
+                Gemini 3 Pro<br><span style="font-size: 14px; color: var(--text-secondary);">Approach A</span>
             </div>
             <div class="provider-input" style="background: rgba(191,90,242,0.15); border: 1px solid var(--purple);">
-                Copilot<br><span style="font-size: 12px; color: var(--text-secondary);">Approach B</span>
+                Copilot<br><span style="font-size: 14px; color: var(--text-secondary);">Approach B</span>
             </div>
         </div>
         <div class="convergence-lines">&darr; &darr; &darr; &darr;</div>
@@ -731,7 +740,7 @@ body {
             <div class="card card-accent" style="margin-bottom: 20px;">
                 <h3>Model-Family-Aware Defaults</h3>
                 <p style="margin-top: 12px;">The provider now detects model families and adjusts automatically:</p>
-                <div style="margin-top: 16px; font-family: monospace; font-size: 13px; line-height: 2;">
+                <div style="margin-top: 16px; font-family: monospace; font-size: 14px; line-height: 2;">
                     <div><span style="color: var(--text-secondary);">Opus:</span> <span style="color: var(--orange);">128K</span> output &middot; <span style="color: var(--orange);">64K</span> thinking</div>
                     <div><span style="color: var(--text-secondary);">Sonnet:</span> <span style="color: var(--teal);">64K</span> output &middot; <span style="color: var(--teal);">32K</span> thinking</div>
                     <div><span style="color: var(--text-secondary);">Haiku:</span> <span style="color: var(--text-tertiary);">64K</span> output &middot; <span style="color: var(--text-tertiary);">32K</span> thinking</div>
@@ -826,7 +835,7 @@ body {
             <div class="card" style="margin-bottom: 20px;">
                 <h3 style="color: var(--accent);">The Slack Connection</h3>
                 <p>The amplifier-distro Slack bridge is a 2,400-line integration connecting Slack workspaces to Amplifier sessions. Messages flow through whatever provider swarm is configured in the user's bundle.</p>
-                <div style="margin-top: 16px; font-family: monospace; font-size: 12px; color: var(--text-tertiary); line-height: 1.8;">
+                <div style="margin-top: 16px; font-family: monospace; font-size: 14px; color: var(--text-tertiary); line-height: 1.8;">
                     Slack &rarr; SocketMode &rarr; EventHandler<br>
                     &rarr; SessionManager &rarr; Bridge API<br>
                     &rarr; Amplifier (your providers)
@@ -935,7 +944,7 @@ body {
 
 <!-- ==================== SLIDE 14: CTA ==================== -->
 <div class="slide" id="slide-14">
-    <div class="bg-glow" style="background: var(--accent); top: 30%; left: 30%; width: 800px; height: 800px; opacity: 0.05;"></div>
+    <div class="bg-glow" style="background: var(--accent); top: 30%; left: 30%; width: 800px; height: 800px; opacity: 0.5;"></div>
     <div class="section-label">Get Started</div>
     <div class="headline">Try it yourself.</div>
     <div class="body-text" style="margin-top: 16px;">
@@ -945,21 +954,21 @@ body {
         <div class="card">
             <h3 style="color: var(--purple);">GitHub Copilot Provider</h3>
             <p style="margin-top: 8px;">
-                <code style="color: var(--green); font-size: 13px;">microsoft/amplifier-module-provider-github-copilot</code>
+                <code style="color: var(--green); font-size: 14px;">microsoft/amplifier-module-provider-github-copilot</code>
             </p>
             <p style="margin-top: 8px;">Zero API keys. Just your Copilot subscription.</p>
         </div>
         <div class="card">
             <h3 style="color: var(--blue);">Anthropic Provider</h3>
             <p style="margin-top: 8px;">
-                <code style="color: var(--green); font-size: 13px;">microsoft/amplifier-module-provider-anthropic</code>
+                <code style="color: var(--green); font-size: 14px;">microsoft/amplifier-module-provider-anthropic</code>
             </p>
             <p style="margin-top: 8px;">1M context. Adaptive thinking. Model-family defaults.</p>
         </div>
         <div class="card">
             <h3 style="color: var(--orange);">Amplifier Distro</h3>
             <p style="margin-top: 8px;">
-                <code style="color: var(--green); font-size: 13px;">microsoft/amplifier-distro</code>
+                <code style="color: var(--green); font-size: 14px;">microsoft/amplifier-distro</code>
             </p>
             <p style="margin-top: 8px;">6 providers. Bundle composer. Multi-provider assumed.</p>
         </div>

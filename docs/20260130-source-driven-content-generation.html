@@ -21,7 +21,16 @@
             
             --padding-slide: clamp(20px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 40px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * {
             margin: 0;
@@ -285,7 +294,7 @@
         }
 
         .pipeline-arrow {
-            font-size: 24px;
+            font-size: 28px;
             color: rgba(255, 255, 255, 0.3);
         }
 
@@ -760,7 +769,7 @@
                     • content.json (text)<br>
                     • validation.json (rules)<br>
                     • mapping.json (web elements)<br><br>
-                    <em style="color: rgba(255,255,255,0.4);">Required cross-referencing 4 files to understand any single section</em>
+                    <em style="color: rgba(255,255,255,0.5);">Required cross-referencing 4 files to understand any single section</em>
                 </div>
             </div>
             <div class="comparison-side after">
@@ -770,7 +779,7 @@
                     • Web element mapping embedded<br>
                     • Source files inline<br>
                     • Validation rules included<br><br>
-                    <em style="color: rgba(255,255,255,0.4);">Everything needed in one self-documenting file</em>
+                    <em style="color: rgba(255,255,255,0.5);">Everything needed in one self-documenting file</em>
                 </div>
             </div>
         </div>
@@ -781,7 +790,7 @@
         <div class="section-label">Coverage</div>
         <div style="display: flex; align-items: baseline; justify-content: center; gap: 24px;">
             <div class="stat-number">13</div>
-            <div style="font-size: 48px; color: rgba(255,255,255,0.3);">→</div>
+            <div style="font-size: 48px; color: rgba(255,255,255,0.5);">→</div>
             <div class="stat-number">33</div>
         </div>
         <h2 class="medium-headline">Sections Mapped</h2>

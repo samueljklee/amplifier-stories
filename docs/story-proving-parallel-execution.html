@@ -51,7 +51,16 @@
             --accent: #00D4AA;
             --accent-dim: rgba(0, 212, 170, 0.15);
             --accent-glow: rgba(0, 212, 170, 0.4);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         h1 {
             font-size: 72px;
@@ -630,12 +639,12 @@
                 <div class="metric-card">
                     <div class="metric-value">65%</div>
                     <div class="metric-desc">faster content validation</div>
-                    <div style="font-size: 16px; color: #555; margin-top: 8px;">271s sequential vs 94s parallel</div>
+                    <div style="font-size: 16px; color: #757575; margin-top: 8px;">271s sequential vs 94s parallel</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value">58%</div>
                     <div class="metric-desc">faster quality validation</div>
-                    <div style="font-size: 16px; color: #555; margin-top: 8px;">330s sequential vs 138s parallel</div>
+                    <div style="font-size: 16px; color: #757575; margin-top: 8px;">330s sequential vs 138s parallel</div>
                 </div>
             </div>
         </div>
@@ -695,7 +704,7 @@
                 <li><strong>Build in observability</strong> - Make systems self-documenting</li>
                 <li><strong>Quantify impact</strong> - "Parallel" means nothing without metrics</li>
             </ul>
-            <p style="margin-top: 48px; font-size: 20px; color: #555;">
+            <p style="margin-top: 48px; font-size: 20px; color: #757575;">
                 Recipe updated to v7.1.0 with embedded parallel execution tracking
             </p>
         </div>

@@ -17,7 +17,16 @@
             --font-big-number: clamp(60px, 20vw, 140px);
             --padding-slide: clamp(20px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 40px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -439,13 +448,13 @@
                     <div class="size">2,300</div>
                     <div class="desc">lines of YAML</div>
                 </div>
-                <div style="font-size: 48px; color: rgba(255,255,255,0.3);">+</div>
+                <div style="font-size: 48px; color: rgba(255,255,255,0.5);">+</div>
                 <div class="file-icon">
                     <div class="icon">&#128268;</div>
                     <div class="size">3</div>
                     <div class="desc">feature branches</div>
                 </div>
-                <div style="font-size: 48px; color: rgba(255,255,255,0.3);">=</div>
+                <div style="font-size: 48px; color: rgba(255,255,255,0.5);">=</div>
                 <div class="file-icon">
                     <div class="icon" style="color: #FF453A;">&#9888;</div>
                     <div class="size" style="color: #FF453A;">Timeout</div>

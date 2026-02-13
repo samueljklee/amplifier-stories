@@ -13,7 +13,7 @@
             --text: #fff;
             --text-muted: rgba(255,255,255,0.6);
             --card-bg: rgba(255,255,255,0.05);
-            --card-border: rgba(255,255,255,0.1);
+            --card-border: rgba(255,255,255,0.12);
             
             --font-headline: clamp(32px, 8vw, 72px);
             --font-medium-headline: clamp(24px, 5vw, 48px);
@@ -23,7 +23,16 @@
             
             --padding-slide: clamp(20px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 40px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * {
             margin: 0;
@@ -585,17 +594,17 @@
                 <div class="card" style="text-align: center;">
                     <div class="version-badge badge-028">v0.0.28</div>
                     <div class="card-title" style="font-size: 16px;">Comparison</div>
-                    <div class="card-desc" style="font-size: 13px;">Side-by-side agent benchmarking</div>
+                    <div class="card-desc" style="font-size: 14px;">Side-by-side agent benchmarking</div>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div class="version-badge badge-029">v0.0.29</div>
                     <div class="card-title" style="font-size: 16px;">Interfaces</div>
-                    <div class="card-desc" style="font-size: 13px;">Simplified APIs & docs</div>
+                    <div class="card-desc" style="font-size: 14px;">Simplified APIs & docs</div>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div class="version-badge badge-031">v0.0.31</div>
                     <div class="card-title" style="font-size: 16px;">Debugging</div>
-                    <div class="card-desc" style="font-size: 13px;">Log context for semantic tests</div>
+                    <div class="card-desc" style="font-size: 14px;">Log context for semantic tests</div>
                 </div>
             </div>
 
@@ -667,19 +676,19 @@
             <div class="grid-4" style="margin-top: 32px;">
                 <div class="card" style="text-align: center;">
                     <div class="card-title" style="font-size: 14px;">Avg Rank</div>
-                    <div class="card-desc" style="font-size: 12px;">Mean position across runs (lower is better)</div>
+                    <div class="card-desc" style="font-size: 14px;">Mean position across runs (lower is better)</div>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div class="card-title" style="font-size: 14px;">Win Rate</div>
-                    <div class="card-desc" style="font-size: 12px;">% of runs ranked #1</div>
+                    <div class="card-desc" style="font-size: 14px;">% of runs ranked #1</div>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div class="card-title" style="font-size: 14px;">Task Wins</div>
-                    <div class="card-desc" style="font-size: 12px;">Tasks with best avg rank</div>
+                    <div class="card-desc" style="font-size: 14px;">Tasks with best avg rank</div>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div class="card-title" style="font-size: 14px;">Kendall's W</div>
-                    <div class="card-desc" style="font-size: 12px;">Inter-rater agreement (0-1)</div>
+                    <div class="card-desc" style="font-size: 14px;">Inter-rater agreement (0-1)</div>
                 </div>
             </div>
 
@@ -899,7 +908,7 @@ uv run eval_recipes.benchmark run \
             </div>
 
             <div style="margin-top: 40px;">
-                <a href="https://github.com/microsoft/eval-recipes" style="display: inline-block; background: var(--accent); color: #000; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; position: relative; z-index: 60;">View on GitHub &#8594;</a>
+                <a href="https://github.com/microsoft/eval-recipes" style="display: inline-block; background: var(--accent); color: #757575; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; position: relative; z-index: 60;">View on GitHub &#8594;</a>
             </div>
         </div>
     </div>

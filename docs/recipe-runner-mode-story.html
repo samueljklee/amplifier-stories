@@ -19,13 +19,22 @@
             --text: #fff;
             --text-dim: rgba(255, 255, 255, 0.6);
             --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --card-border: rgba(255,255,255,0.12);
             --green: #30D158;
             --red: #FF6B6B;
             --orange: #FF9F0A;
             --blue: #64D2FF;
             --purple: #BF5AF2;
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         html, body {
             height: 100%;
@@ -553,7 +562,7 @@
             <div class="comparison">
                 <div class="comparison-card before">
                     <div class="comparison-label before">Without Mode</div>
-                    <div class="code-block" style="font-size: 13px;"><span class="c-gray"># User: "Run my PR review recipe"</span>
+                    <div class="code-block" style="font-size: 14px;"><span class="c-gray"># User: "Run my PR review recipe"</span>
 
 <span class="c-yellow">Agent thinks:</span> "I'll help with PR review!"
 <span class="c-yellow">Agent does:</span>
@@ -564,7 +573,7 @@
                 </div>
                 <div class="comparison-card after">
                     <div class="comparison-label after">With Recipe-Runner Mode</div>
-                    <div class="code-block" style="font-size: 13px;"><span class="c-gray"># User: "Run my PR review recipe"</span>
+                    <div class="code-block" style="font-size: 14px;"><span class="c-gray"># User: "Run my PR review recipe"</span>
 
 <span class="c-green">Agent thinks:</span> "I can only use recipes tool"
 <span class="c-green">Agent does:</span>
@@ -688,14 +697,14 @@
             <div class="comparison">
                 <div class="comparison-card before">
                     <div class="comparison-label before">Mode Config Provided</div>
-                    <div class="code-block" style="font-size: 13px;"><span class="c-purple">tool_policies:</span>
+                    <div class="code-block" style="font-size: 14px;"><span class="c-purple">tool_policies:</span>
   <span class="c-blue">default_action:</span> block
 <span class="c-purple">tools:</span>
   <span class="c-blue">recipes:</span> safe</div>
                 </div>
                 <div class="comparison-card" style="border-color: rgba(255, 159, 10, 0.5);">
                     <div class="comparison-label" style="color: var(--orange);">Code Expected</div>
-                    <div class="code-block" style="font-size: 13px;"><span class="c-purple">tool_policies:</span>
+                    <div class="code-block" style="font-size: 14px;"><span class="c-purple">tool_policies:</span>
   <span class="c-blue">default_action:</span> block
   <span class="c-blue">tools:</span>           <span class="c-gray"># nested!</span>
     <span class="c-blue">recipes:</span> safe</div>

@@ -10,11 +10,11 @@
             --accent-dim: rgba(0, 212, 170, 0.15);
             --accent-glow: rgba(0, 212, 170, 0.3);
             --bg: #000;
-            --card-bg: rgba(255, 255, 255, 0.04);
-            --card-border: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(255,255,255,0.06);
+            --card-border: rgba(255,255,255,0.12);
             --text: #fff;
             --text-dim: rgba(255, 255, 255, 0.6);
-            --text-muted: rgba(255, 255, 255, 0.4);
+            --text-muted: rgba(255,255,255,0.5);
             --red: #FF6B6B;
             --green: #4ADE80;
             --blue: #60A5FA;
@@ -28,7 +28,16 @@
             --font-small: clamp(12px, 1.5vw, 14px);
             --padding-slide: clamp(24px, 5vw, 80px);
             --gap: clamp(16px, 3vw, 32px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * {
             margin: 0;
@@ -632,7 +641,7 @@
                     <div class="card-icon">🕸️</div>
                     <div class="card-title">Dynamic SPAs</div>
                     <div class="card-desc" style="margin-bottom: 16px;">Content loaded via JavaScript, infinite scroll, lazy loading - all accessible.</div>
-                    <div class="code-block" style="font-size: 13px;">
+                    <div class="code-block" style="font-size: 14px;">
 <span class="comment"># What you get with fetch:</span>
 &lt;div id="app"&gt;&lt;/div&gt;
 

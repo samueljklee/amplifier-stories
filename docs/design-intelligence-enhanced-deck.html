@@ -11,13 +11,22 @@
             --accent-glow: rgba(155, 123, 255, 0.3);
             --bg: #0a0a0a;
             --card-bg: rgba(255,255,255,0.05);
-            --card-border: rgba(255,255,255,0.1);
+            --card-border: rgba(255,255,255,0.12);
             --text: #fff;
             --text-dim: rgba(255,255,255,0.6);
             --success: #30D158;
             --warning: #FF9F0A;
             --cyan: #00CED1;
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -512,7 +521,7 @@
                         <li>Spacing & radius systems</li>
                         <li>Motion timing & easing</li>
                     </ul>
-                    <div style="margin-top: 16px; font-size: 13px; color: var(--text-dim);">
+                    <div style="margin-top: 16px; font-size: 14px; color: var(--text-dim);">
                         <strong>Exports:</strong> CSS, Tailwind, SCSS, Flat JSON
                     </div>
                 </div>
@@ -525,7 +534,7 @@
                         <li>Accessibility requirements</li>
                         <li>Token references (never hardcoded)</li>
                     </ul>
-                    <div style="margin-top: 16px; font-size: 13px; color: var(--text-dim);">
+                    <div style="margin-top: 16px; font-size: 14px; color: var(--text-dim);">
                         <strong>Format:</strong> Design Protocol JSON Schema
                     </div>
                 </div>

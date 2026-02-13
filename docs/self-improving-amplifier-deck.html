@@ -17,7 +17,16 @@
             --font-big-number: clamp(48px, 15vw, 140px);
             --padding-slide: clamp(20px, 5vw, 80px);
             --gap-grid: clamp(16px, 3vw, 40px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -602,7 +611,7 @@
 
         <div class="highlight-box">
             <p>&ldquo;We build tools that build tools. A lot of Amplifier's scenarios are literally <span class="hl">tools that improve Amplifier.</span>&rdquo;</p>
-            <p style="margin-top: 12px; color: rgba(255,255,255,0.4); font-size: clamp(12px, 1.6vw, 14px);">&mdash; Brian Krabach, Office of the CTO, Microsoft</p>
+            <p style="margin-top: 12px; color: rgba(255,255,255,0.5); font-size: clamp(12px, 1.6vw, 14px);">&mdash; Brian Krabach, Office of the CTO, Microsoft</p>
         </div>
 
         <p class="body-text" style="margin-top: 24px;">The hypothesis: build an orchestrator that operates on <em>Maslow's hierarchy of needs</em> &mdash; first ensuring its own survival, then pursuing higher-order goals. Originally codenamed <strong style="color: var(--accent);">Albert</strong>, later renamed to <strong>Self-Driving</strong>.</p>
@@ -956,7 +965,7 @@ amplifier run --bundle ./bundle.md \
             </div>
         </div>
 
-        <p class="small-text" style="margin-top: 32px; text-align: center; max-width: 600px; color: rgba(255,255,255,0.35);">Built on Amplifier &mdash; Microsoft Office of the CTO<br>An experiment that started as &ldquo;what if&rdquo; and became a working self-improving system.</p>
+        <p class="small-text" style="margin-top: 32px; text-align: center; max-width: 600px; color: rgba(255,255,255,0.5);">Built on Amplifier &mdash; Microsoft Office of the CTO<br>An experiment that started as &ldquo;what if&rdquo; and became a working self-improving system.</p>
     </div>
 
     <!-- Navigation -->

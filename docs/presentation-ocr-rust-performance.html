@@ -43,7 +43,16 @@
         :root {
             --accent: #FF6B35;
             --accent-dim: rgba(255, 107, 53, 0.2);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         /* Title Slide */
         .slide.title {
@@ -421,22 +430,22 @@
                     <div class="card">
                         <div class="card-number">150+</div>
                         <div class="card-label">Long-s Patterns</div>
-                        <div style="margin-top: 20px; font-size: 20px; color: #666;">ſ → s, eſs → ess, aſh → ash</div>
+                        <div style="margin-top: 20px; font-size: 20px; color: #757575;">ſ → s, eſs → ess, aſh → ash</div>
                     </div>
                     <div class="card">
                         <div class="card-number">200+</div>
                         <div class="card-label">OCR Corrections</div>
-                        <div style="margin-top: 20px; font-size: 20px; color: #666;">hstory → history, TIIE → THE</div>
+                        <div style="margin-top: 20px; font-size: 20px; color: #757575;">hstory → history, TIIE → THE</div>
                     </div>
                     <div class="card">
                         <div class="card-number">50+</div>
                         <div class="card-label">Watermark Removal</div>
-                        <div style="margin-top: 20px; font-size: 20px; color: #666;">Google Books, Archive.org stamps</div>
+                        <div style="margin-top: 20px; font-size: 20px; color: #757575;">Google Books, Archive.org stamps</div>
                     </div>
                     <div class="card">
                         <div class="card-number">50+</div>
                         <div class="card-label">Other Fixes</div>
-                        <div style="margin-top: 20px; font-size: 20px; color: #666;">Whitespace, hyphenation, etc.</div>
+                        <div style="margin-top: 20px; font-size: 20px; color: #757575;">Whitespace, hyphenation, etc.</div>
                     </div>
                 </div>
                 <div style="margin-top: 60px; text-align: center; font-size: 36px;">
@@ -682,7 +691,7 @@
                 <a href="https://github.com/robotdad/timecapsule-data" class="cta-button">
                     View on GitHub
                 </a>
-                <div style="font-size: 28px; color: #666; margin-top: 60px; line-height: 1.8;">
+                <div style="font-size: 28px; color: #757575; margin-top: 60px; line-height: 1.8;">
                     • 450+ OCR pattern library<br>
                     • Rust processing core with PyO3<br>
                     • Hybrid Python/Rust architecture<br>

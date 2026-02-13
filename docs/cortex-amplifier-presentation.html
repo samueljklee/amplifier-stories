@@ -16,11 +16,11 @@
         :root {
             --bg-dark: #000;
             --bg-slide: #0a0a0a;
-            --bg-card: #141414;
+            --bg-card: #161616;
             --border: #2a2a2a;
             --text-primary: #fff;
             --text-secondary: #a1a1a6;
-            --text-dim: #6e6e73;
+            --text-dim: #75757a;
             --accent: #2997ff;
             --accent-secondary: #64d2ff;
             --gradient-1: #667eea;
@@ -841,17 +841,17 @@
                 <div class="decision-box push">
                     <div class="decision-label">PUSH</div>
                     <div class="decision-threshold">score >= 0.7</div>
-                    <div style="margin-top: 8px; font-size: 13px;">Interrupt now</div>
+                    <div style="margin-top: 8px; font-size: 14px;">Interrupt now</div>
                 </div>
                 <div class="decision-box defer">
                     <div class="decision-label">DEFER</div>
                     <div class="decision-threshold">0.3 - 0.7</div>
-                    <div style="margin-top: 8px; font-size: 13px;">Queue for triage</div>
+                    <div style="margin-top: 8px; font-size: 14px;">Queue for triage</div>
                 </div>
                 <div class="decision-box suppress">
                     <div class="decision-label">SUPPRESS</div>
                     <div class="decision-threshold">score < 0.3</div>
-                    <div style="margin-top: 8px; font-size: 13px;">Silent log only</div>
+                    <div style="margin-top: 8px; font-size: 14px;">Silent log only</div>
                 </div>
             </div>
             <div class="small-text">VIP senders bypass scoring - always push immediately</div>

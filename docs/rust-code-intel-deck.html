@@ -36,7 +36,16 @@
             --radius-sm: clamp(8px, 1vw, 12px);
             --radius-md: clamp(12px, 1.5vw, 16px);
             --radius-lg: clamp(16px, 2vw, 24px);
-        }
+
+    /* Surface hierarchy (injected by deck-style-fix) */
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.10);
+    --surface-3: rgba(255,255,255,0.15);
+    --border-subtle: rgba(255,255,255,0.12);
+    --text-primary: #ffffff;
+    --text-readable: rgba(255,255,255,0.7);
+    --text-muted-floor: rgba(255,255,255,0.5);
+}
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -651,7 +660,7 @@
     </div>
     <div style="margin-top: var(--space-md); display: flex; gap: var(--space-md); flex-wrap: wrap;">
         <span class="badge badge-orange">✦ New</span>
-        <span style="font-size: var(--fs-small); color: rgba(255,255,255,0.4); line-height: 2;">Verification &middot; Refactoring &middot; Type Intelligence &middot; Inspection &middot; Extensibility</span>
+        <span style="font-size: var(--fs-small); color: rgba(255,255,255,0.5); line-height: 2;">Verification &middot; Refactoring &middot; Type Intelligence &middot; Inspection &middot; Extensibility</span>
     </div>
 </div>
 
@@ -832,11 +841,11 @@ LSP.goToImplementation(
     <p class="body-text" style="margin-bottom: var(--space-sm);">rust-analyzer needs 30–90 seconds to index a large workspace. That's fine once — but not every session.</p>
 
     <div class="flow">
-        <div class="flow-box" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);">Session 1<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.4);">Cold start: 60s index</span></div>
+        <div class="flow-box" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);">Session 1<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.5);">Cold start: 60s index</span></div>
         <div class="flow-arrow">→</div>
         <div class="flow-box" style="background: var(--accent-glow); border: 1px solid rgba(228,77,38,0.3); color: var(--accent);">Persistent Proxy<br><span style="font-size: var(--fs-small); color: var(--accent-soft);">Keeps server warm</span></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-box" style="background: rgba(48,209,88,0.1); border: 1px solid rgba(48,209,88,0.2); color: var(--green);">Session 2+<br><span style="font-size: var(--fs-small); color: rgba(48,209,88,0.5);">Instant connect</span></div>
+        <div class="flow-box" style="background: rgba(48,209,88,0.1); border: 1px solid rgba(48,209,88,0.2); color: var(--green);">Session 2+<br><span style="font-size: var(--fs-small); color: rgba(48,209,88,0.65);">Instant connect</span></div>
     </div>
 
     <div class="thirds" style="margin-top: var(--space-lg);">
@@ -872,19 +881,19 @@ LSP.goToImplementation(
     <div class="quad">
         <div class="card" style="text-align: center;">
             <div style="font-size: clamp(24px, 5vw, 36px); font-weight: 800; color: var(--green); margin-bottom: 4px;">0</div>
-            <div class="card-desc">External dependencies<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.3);">Python stdlib only</span></div>
+            <div class="card-desc">External dependencies<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.5);">Python stdlib only</span></div>
         </div>
         <div class="card" style="text-align: center;">
             <div style="font-size: clamp(24px, 5vw, 36px); font-weight: 800; color: var(--accent); margin-bottom: 4px;">488+</div>
-            <div class="card-desc">Unit tests<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.3);">Comprehensive coverage</span></div>
+            <div class="card-desc">Unit tests<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.5);">Comprehensive coverage</span></div>
         </div>
         <div class="card" style="text-align: center;">
             <div style="font-size: clamp(24px, 5vw, 36px); font-weight: 800; color: var(--blue); margin-bottom: 4px;">17</div>
-            <div class="card-desc">LSP operations<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.3);">Dynamically filtered</span></div>
+            <div class="card-desc">LSP operations<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.5);">Dynamically filtered</span></div>
         </div>
         <div class="card" style="text-align: center;">
             <div style="font-size: clamp(24px, 5vw, 36px); font-weight: 800; color: var(--purple); margin-bottom: 4px;">∀</div>
-            <div class="card-desc">All languages benefit<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.3);">Not just Rust</span></div>
+            <div class="card-desc">All languages benefit<br><span style="font-size: var(--fs-small); color: rgba(255,255,255,0.5);">Not just Rust</span></div>
         </div>
     </div>
 
