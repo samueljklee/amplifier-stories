@@ -46,6 +46,11 @@ CONTENT_LEFT = 0.8
 CONTENT_WIDTH = 8.4
 CONTENT_RIGHT = CONTENT_LEFT + CONTENT_WIDTH
 
+# ── Spacing constants (consistent gap system) ────────────────────────────────
+GAP_TIGHT = 0.08  # within a card, between tightly related elements
+GAP_NORMAL = 0.10  # standard gap between elements on a slide
+GAP_SECTION = 0.20  # gap between major sections (e.g., headline to cards)
+
 # ── Color palette (matching Amplifier Stories dark-mode style) ────────────────
 BLACK = RGBColor(0x00, 0x00, 0x00)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
@@ -348,6 +353,23 @@ def add_filled_box(
 # ── Element-level helpers ─────────────────────────────────────────────────────
 
 
+def _estimate_text_height(
+    text: str, font_size_pt: int, box_width_inches: float, line_spacing: float = 1.2
+) -> float:
+    """Estimate rendered text height based on character count and box width.
+
+    Uses a rough heuristic for proportional fonts to determine how many lines
+    the text will wrap to, then computes the total height including padding.
+    """
+    chars_per_inch = 72 / font_size_pt * 1.8  # rough heuristic
+    chars_per_line = int(box_width_inches * chars_per_inch)
+    if chars_per_line < 1:
+        chars_per_line = 1
+    num_lines = max(1, -(-len(text) // chars_per_line))  # ceil division
+    line_height = font_size_pt / 72 * line_spacing
+    return num_lines * line_height + 0.1  # 0.1" padding
+
+
 def add_section_label(slide, text: str, top: float = 0.6, color: RGBColor = MS_BLUE):
     """Add a colored uppercase section label."""
     return add_text_box(
@@ -372,14 +394,12 @@ def add_headline(
     center: bool = False,
     color: RGBColor = WHITE,
 ):
-    """Add a large headline."""
-    # Scale box height to font size: large headlines may wrap, smaller ones don't
-    if size >= 48:
-        box_height = 1.5
-    elif size >= 36:
-        box_height = 1.1
-    else:
-        box_height = 0.6
+    """Add a large headline with dynamically estimated box height."""
+    # Estimate actual height needed based on text length and font size
+    box_height = _estimate_text_height(text, size, CONTENT_WIDTH)
+    # Apply sensible min/max: at least one line, at most 2.0"
+    min_height = size / 72 * 1.2 + 0.1  # single line minimum
+    box_height = max(min_height, min(box_height, 2.0))
     return add_text_box(
         slide,
         text,
@@ -397,14 +417,17 @@ def add_headline(
 def add_subhead(
     slide, text: str, top: float = 2.8, color: RGBColor = GRAY_70, center: bool = False
 ):
-    """Add a subtitle/subheading."""
+    """Add a subtitle/subheading with dynamically estimated box height."""
+    # Estimate height needed instead of fixed 1.0"
+    box_height = _estimate_text_height(text, 24, CONTENT_WIDTH)
+    box_height = max(0.5, min(box_height, 1.5))
     return add_text_box(
         slide,
         text,
         left=CONTENT_LEFT,
         top=top,
         width=CONTENT_WIDTH,
-        height=1.0,
+        height=box_height,
         font_size=24,
         color=color,
         align=PP_ALIGN.CENTER if center else PP_ALIGN.LEFT,
@@ -426,6 +449,11 @@ def add_card(
     # Card background
     add_filled_box(slide, left, top, width, height)
 
+    # Adaptive title height: scale with card height, estimate from text
+    title_height = min(0.4, height * 0.25)
+    title_est = _estimate_text_height(title, 16, width - 0.3)
+    title_height = max(title_height, min(title_est, 0.5))
+
     # Card title
     add_text_box(
         slide,
@@ -433,15 +461,17 @@ def add_card(
         left=left + 0.15,
         top=top + 0.15,
         width=width - 0.3,
-        height=0.4,
+        height=title_height,
         font_size=16,
         bold=True,
         color=title_color,
     )
 
     # Card text (rich or plain)
-    text_top = top + 0.15 + 0.4 + 0.05  # title_top + title_height + gap
-    text_height = height - (0.15 + 0.4 + 0.05 + 0.05)  # pad + title + gap + bottom_pad
+    text_top = top + 0.15 + title_height + GAP_TIGHT  # title_top + title_height + gap
+    text_height = height - (
+        0.15 + title_height + GAP_TIGHT + 0.05
+    )  # pad + title + gap + bottom_pad
     if rich_runs:
         add_rich_text_box(
             slide,
@@ -654,7 +684,7 @@ class HTMLToPPTXConverter:
                 top=current_top,
                 color=self.accent_color,
             )
-            current_top += 0.4
+            current_top += 0.4 + GAP_TIGHT  # section-label height + tight gap
             handled_elements.add(id(section_number))
 
         section_title = slide_div.find(class_="section-title")
@@ -670,7 +700,7 @@ class HTMLToPPTXConverter:
                 bold=True,
                 color=WHITE,
             )
-            current_top += 0.5
+            current_top += 0.5 + GAP_NORMAL
             handled_elements.add(id(section_title))
 
         # ── Section label ────────────────────────────────────────────────────
@@ -681,7 +711,7 @@ class HTMLToPPTXConverter:
             add_section_label(
                 slide, get_text(section_label), top=current_top, color=self.accent_color
             )
-            current_top += 0.5
+            current_top += 0.4 + GAP_NORMAL  # section-label height + normal gap
             handled_elements.add(id(section_label))
 
         # ── Headline (h1 or h2.headline) ─────────────────────────────────────
@@ -700,21 +730,27 @@ class HTMLToPPTXConverter:
             add_headline(
                 slide, text, top=current_top, size=size, center=is_centered, color=color
             )
-            # Advance must match box_height in add_headline (1.5/1.1/0.6) + gap
-            current_top += 1.8 if size > 45 else 1.2
+            # Advance by dynamically estimated headline height + section gap
+            headline_height = _estimate_text_height(text, size, CONTENT_WIDTH)
+            min_h = size / 72 * 1.2 + 0.1
+            headline_height = max(min_h, min(headline_height, 2.0))
+            current_top += headline_height + GAP_SECTION
             handled_elements.add(id(headline))
 
         # ── Medium headline ──────────────────────────────────────────────────
         medium_headline = slide_div.find(class_="medium-headline")
         if medium_headline and id(medium_headline) not in handled_elements:
+            mh_text = get_text(medium_headline)
             add_headline(
                 slide,
-                get_text(medium_headline),
+                mh_text,
                 top=current_top,
                 size=36,
                 center=is_centered,
             )
-            current_top += 1.2
+            mh_height = _estimate_text_height(mh_text, 36, CONTENT_WIDTH)
+            mh_height = max(36 / 72 * 1.2 + 0.1, min(mh_height, 2.0))
+            current_top += mh_height + GAP_SECTION
             handled_elements.add(id(medium_headline))
 
         # ── Subhead ──────────────────────────────────────────────────────────
@@ -722,8 +758,10 @@ class HTMLToPPTXConverter:
         if subhead:
             text = get_text(subhead)
             add_subhead(slide, text, top=current_top, center=is_centered)
-            # Advance must match height=1.0 in add_subhead + gap
-            current_top += 1.1
+            # Advance by the same box height that add_subhead() computed + gap
+            sub_height = _estimate_text_height(text, 24, CONTENT_WIDTH)
+            sub_height = max(0.5, min(sub_height, 1.5))  # must match add_subhead caps
+            current_top += sub_height + GAP_NORMAL
             handled_elements.add(id(subhead))
 
         # ── Architecture diagram (preformatted text art) ─────────────────────
@@ -766,7 +804,7 @@ class HTMLToPPTXConverter:
 
             if cards:
                 cards_height = self._add_cards(slide, cards, current_top, container)
-                current_top += cards_height + 0.2
+                current_top += cards_height + GAP_SECTION
                 handled_elements.add(id(container))
                 for c in cards:
                     handled_elements.add(id(c))
@@ -782,7 +820,7 @@ class HTMLToPPTXConverter:
         ]
         if standalone_cards:
             cards_height = self._add_cards(slide, standalone_cards, current_top)
-            current_top += cards_height + 0.2
+            current_top += cards_height + GAP_SECTION
             for c in standalone_cards:
                 handled_elements.add(id(c))
 
@@ -850,7 +888,7 @@ class HTMLToPPTXConverter:
                 continue
             self._add_feature_list(slide, fl, current_top)
             items = fl.find_all("li")
-            current_top += len(items) * 0.35 + 0.2
+            current_top += len(items) * 0.35 + GAP_SECTION
 
         # ── Notification stacks ──────────────────────────────────────────────
         notif_stack = slide_div.find(class_="notification-stack")
@@ -885,11 +923,14 @@ class HTMLToPPTXConverter:
                 rich_runs=rich if len(rich) > 1 else None,
             )
             current_top += 0.8
+            handled_elements.add(id(hb))
 
         # ── Quote ────────────────────────────────────────────────────────────
         quote = slide_div.find(class_="quote")
         if quote:
             self._add_quote(slide, quote, current_top)
+            current_top += 1.5  # quote height (1.2) + attribution (0.3)
+            handled_elements.add(id(quote))
 
         # ── Small text (footer) ──────────────────────────────────────────────
         small_texts = slide_div.find_all(class_="small-text")
@@ -909,7 +950,40 @@ class HTMLToPPTXConverter:
                 align=PP_ALIGN.CENTER if is_centered else PP_ALIGN.LEFT,
             )
             small_text_top += 0.4
+            handled_elements.add(id(st))
         current_top = small_text_top
+
+        # ── Fallback: render unrecognized elements with text content ─────────
+        # Instead of silently dropping unknown elements, render them as
+        # generic text boxes so no content vanishes.
+        for el in slide_div.children:
+            if not isinstance(el, Tag):
+                continue
+            if id(el) in handled_elements:
+                continue
+            # Skip elements that are parents of already-handled children
+            if any(
+                id(desc) in handled_elements
+                for desc in el.descendants
+                if isinstance(desc, Tag)
+            ):
+                continue
+            if hasattr(el, "get_text") and el.get_text(strip=True):
+                text = get_text(el)
+                if text and len(text) > 5:  # skip trivial fragments
+                    fb_height = min(1.0, len(text) / 80 * 0.3 + 0.3)
+                    add_text_box(
+                        slide,
+                        text,
+                        left=CONTENT_LEFT,
+                        top=current_top,
+                        width=CONTENT_WIDTH,
+                        height=fb_height,
+                        font_size=14,
+                        color=GRAY_70,
+                    )
+                    current_top += fb_height + GAP_NORMAL
+                    handled_elements.add(id(el))
 
         # ── Overflow warning ─────────────────────────────────────────────────
         if current_top > SLIDE_HEIGHT + 0.5:
