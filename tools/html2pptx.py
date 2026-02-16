@@ -25,6 +25,7 @@ Supports all Amplifier Stories element types including:
 """
 
 import argparse
+import math
 import re
 import sys
 import warnings
@@ -358,34 +359,170 @@ def add_filled_box(
 # ── Element-level helpers ─────────────────────────────────────────────────────
 
 
-def _estimate_text_height(
-    text: str, font_size_pt: int, box_width_inches: float, line_spacing: float = 1.2
-) -> float:
-    """Estimate rendered text height based on character count and box width.
+# ---------------------------------------------------------------------------
+# Arial character-width tables (fraction of em-size)
+# Measured from Arial TrueType metrics.  Missing chars use the default.
+# ---------------------------------------------------------------------------
+_ARIAL_REGULAR: dict[str, float] = {
+    " ": 0.28,
+    "!": 0.28,
+    '"': 0.35,
+    "#": 0.56,
+    "$": 0.56,
+    "%": 0.89,
+    "&": 0.67,
+    "'": 0.19,
+    "(": 0.33,
+    ")": 0.33,
+    "*": 0.39,
+    "+": 0.58,
+    ",": 0.28,
+    "-": 0.33,
+    ".": 0.28,
+    "/": 0.28,
+    "0": 0.56,
+    "1": 0.56,
+    "2": 0.56,
+    "3": 0.56,
+    "4": 0.56,
+    "5": 0.56,
+    "6": 0.56,
+    "7": 0.56,
+    "8": 0.56,
+    "9": 0.56,
+    ":": 0.28,
+    ";": 0.28,
+    "<": 0.58,
+    "=": 0.58,
+    ">": 0.58,
+    "?": 0.56,
+    "@": 1.02,
+    "A": 0.67,
+    "B": 0.67,
+    "C": 0.72,
+    "D": 0.72,
+    "E": 0.67,
+    "F": 0.61,
+    "G": 0.78,
+    "H": 0.72,
+    "I": 0.28,
+    "J": 0.50,
+    "K": 0.67,
+    "L": 0.56,
+    "M": 0.83,
+    "N": 0.72,
+    "O": 0.78,
+    "P": 0.67,
+    "Q": 0.78,
+    "R": 0.72,
+    "S": 0.67,
+    "T": 0.61,
+    "U": 0.72,
+    "V": 0.67,
+    "W": 0.94,
+    "X": 0.67,
+    "Y": 0.67,
+    "Z": 0.61,
+    "[": 0.28,
+    "\\": 0.28,
+    "]": 0.28,
+    "^": 0.47,
+    "_": 0.56,
+    "`": 0.33,
+    "a": 0.56,
+    "b": 0.56,
+    "c": 0.50,
+    "d": 0.56,
+    "e": 0.56,
+    "f": 0.28,
+    "g": 0.56,
+    "h": 0.56,
+    "i": 0.22,
+    "j": 0.22,
+    "k": 0.50,
+    "l": 0.22,
+    "m": 0.83,
+    "n": 0.56,
+    "o": 0.56,
+    "p": 0.56,
+    "q": 0.56,
+    "r": 0.33,
+    "s": 0.50,
+    "t": 0.28,
+    "u": 0.56,
+    "v": 0.50,
+    "w": 0.72,
+    "x": 0.50,
+    "y": 0.50,
+    "z": 0.50,
+    "{": 0.33,
+    "|": 0.26,
+    "}": 0.33,
+    "~": 0.58,
+}
+_ARIAL_REGULAR_DEFAULT = 0.56
 
-    Uses a calibrated heuristic for proportional fonts.  Large fonts (headlines,
-    subheads) pack fewer characters per inch but the old factor of 1.8 was too
-    conservative, causing single-line text to be estimated as 2+ lines and
-    cascading layout overflow.  The scaling factor increases with font size to
-    reflect that wider glyphs at large sizes still fit more chars/inch than the
-    linear ratio suggests (kerning, proportional widths).
+# Bold glyphs are ~8% wider on average
+_ARIAL_BOLD_SCALE = 1.08
+
+
+def _estimate_text_width_pt(text: str, font_size_pt: int, bold: bool = False) -> float:
+    """Return estimated rendered width of *text* in points for Arial."""
+    table = _ARIAL_REGULAR
+    default = _ARIAL_REGULAR_DEFAULT
+    total = 0.0
+    for ch in text:
+        total += table.get(ch, default)
+    width_pt = total * font_size_pt
+    if bold:
+        width_pt *= _ARIAL_BOLD_SCALE
+    return width_pt
+
+
+def _estimate_text_height(
+    text: str,
+    font_size_pt: int,
+    box_width_inches: float,
+    line_spacing: float = 1.2,
+    bold: bool = False,
+) -> float:
+    """Estimate rendered text height using per-character width tables.
+
+    Uses Arial TrueType character-width metrics to compute the actual
+    rendered width of each line, then determines wrapping based on the
+    available box width.  This is far more accurate than average-factor
+    approaches because character widths in proportional fonts vary by 4x
+    (e.g. 'i' = 0.22em vs 'W' = 0.94em).
+
+    PowerPoint text frames have ~0.1" internal margin on each side, so the
+    usable text width is reduced by 0.2".  The 0.10" vertical padding
+    accounts for top+bottom text-frame margins.
     """
-    # Calibrated against proportional fonts (Calibri/Segoe UI) rendered in
-    # PowerPoint text boxes.  Larger fonts need higher scale because headline
-    # text typically uses shorter words with more whitespace between glyphs.
-    # At 12pt → ~2.3; at 24pt → ~2.6; at 36pt → ~2.9; at 48pt → ~3.2
-    scale = 2.0 + min(font_size_pt, 60) / 40
-    chars_per_inch = 72 / font_size_pt * scale
-    chars_per_line = int(box_width_inches * chars_per_inch)
-    if chars_per_line < 1:
-        chars_per_line = 1
-    # Account for explicit line breaks in text
+    # Usable text width inside the text frame (0.1" margin each side)
+    usable_width_pt = (box_width_inches - 0.20) * 72.0
+    if usable_width_pt < 36:  # absolute minimum
+        usable_width_pt = 36.0
+
     paragraphs = text.split("\n")
-    num_lines = 0
+    num_lines = 0.0
     for para in paragraphs:
-        num_lines += max(1, -(-len(para) // chars_per_line))  # ceil division
-    line_height = font_size_pt / 72 * line_spacing
-    return num_lines * line_height + 0.08  # 0.08" padding
+        stripped = para.strip()
+        if not stripped:
+            num_lines += 0.4  # empty paragraph gets ~40% of a line
+            continue
+        # Compute rendered width and determine how many lines it wraps to
+        rendered_pt = _estimate_text_width_pt(stripped, font_size_pt, bold)
+        if rendered_pt <= usable_width_pt:
+            num_lines += 1
+        else:
+            # Word-wrap estimation: divide rendered width by usable width.
+            # Add 5% for word-boundary inefficiency (lines can't break mid-word
+            # optimally, so there's leftover space at the end of each line).
+            wrap_lines = rendered_pt / usable_width_pt * 1.05
+            num_lines += max(2, math.ceil(wrap_lines))
+
+    line_height = font_size_pt / 72.0 * line_spacing
+    return num_lines * line_height + 0.10  # 0.10" for text-frame margins
 
 
 def add_section_label(slide, text: str, top: float = 0.6, color: RGBColor = MS_BLUE):
@@ -413,11 +550,11 @@ def add_headline(
     color: RGBColor = WHITE,
 ):
     """Add a large headline with dynamically estimated box height."""
-    # Estimate actual height needed based on text length and font size
-    box_height = _estimate_text_height(text, size, CONTENT_WIDTH)
-    # Apply sensible min/max: at least one line, at most 2.0"
+    # Estimate actual height needed — headlines are always bold
+    box_height = _estimate_text_height(text, size, CONTENT_WIDTH, bold=True)
+    # At least one line; cap at 3.5" (overflow compression handles the rest)
     min_height = size / 72 * 1.2 + 0.1  # single line minimum
-    box_height = max(min_height, min(box_height, 2.0))
+    box_height = max(min_height, min(box_height, 3.5))
     return add_text_box(
         slide,
         text,
@@ -436,9 +573,10 @@ def add_subhead(
     slide, text: str, top: float = 2.8, color: RGBColor = GRAY_70, center: bool = False
 ):
     """Add a subtitle/subheading with dynamically estimated box height."""
-    # Estimate height needed instead of fixed 1.0"
-    box_height = _estimate_text_height(text, 24, CONTENT_WIDTH)
-    box_height = max(0.5, min(box_height, 1.5))
+    # Estimate height needed — subheads are not bold
+    box_height = _estimate_text_height(text, 24, CONTENT_WIDTH, bold=False)
+    min_height = 24 / 72 * 1.2 + 0.1  # single line minimum
+    box_height = max(min_height, min(box_height, 2.5))
     return add_text_box(
         slide,
         text,
@@ -467,10 +605,11 @@ def add_card(
     # Card background
     add_filled_box(slide, left, top, width, height)
 
-    # Adaptive title height: scale with card height, estimate from text
-    title_height = min(0.4, height * 0.25)
-    title_est = _estimate_text_height(title, 16, width - 0.3)
-    title_height = max(title_height, min(title_est, 0.5))
+    # Adaptive title height: estimate from text, allow up to 50% of card.
+    # The +0.05" buffer prevents tight-fit overflows where text-frame internal
+    # margins cause the estimate to be fractionally too small.
+    title_est = _estimate_text_height(title, 16, width - 0.3, bold=True) + 0.05
+    title_height = max(0.35, min(title_est, height * 0.50))
 
     # Card title
     add_text_box(
@@ -490,15 +629,34 @@ def add_card(
     text_height = height - (
         0.15 + title_height + GAP_TIGHT + 0.05
     )  # pad + title + gap + bottom_pad
+
+    # Auto-reduce font when description overflows available space
+    inner_w = width - 0.3
+    desc_content = text if text else ""
+    if rich_runs:
+        desc_content = " ".join(r.get("text", "") for r in rich_runs)
+    desc_font = 12
+    for try_size in (12, 11, 10, 9, 8):
+        if _estimate_text_height(desc_content, try_size, inner_w) <= max(
+            text_height, 0.2
+        ):
+            desc_font = try_size
+            break
+        desc_font = try_size  # use smallest if none fit
+
+    # Ensure text box is tall enough for the text at the chosen font size
+    desc_est = _estimate_text_height(desc_content, desc_font, inner_w)
+    text_height = max(text_height, desc_est)
+
     if rich_runs:
         add_rich_text_box(
             slide,
             rich_runs,
             left=left + 0.15,
             top=text_top,
-            width=width - 0.3,
+            width=inner_w,
             height=max(text_height, 0.2),
-            font_size=12,
+            font_size=desc_font,
             default_color=GRAY_70,
         )
     else:
@@ -507,9 +665,9 @@ def add_card(
             text,
             left=left + 0.15,
             top=text_top,
-            width=width - 0.3,
+            width=inner_w,
             height=max(text_height, 0.2),
-            font_size=12,
+            font_size=desc_font,
             color=GRAY_70,
         )
 
@@ -550,29 +708,34 @@ def add_tenet(
     # Title (offset right to clear the 0.15" accent bar)
     text_left = left + 0.25
     text_width = width - 0.35
+    title_h = _estimate_text_height(title, 14, text_width, bold=True)
+    title_h = max(0.25, min(title_h, height * 0.45))
     add_text_box(
         slide,
         title,
         left=text_left,
-        top=top + 0.1,
+        top=top + 0.08,
         width=text_width,
-        height=0.3,
+        height=title_h,
         font_size=14,
         bold=True,
         color=WHITE,
     )
 
     # Text
-    add_text_box(
-        slide,
-        text,
-        left=text_left,
-        top=top + 0.4,
-        width=text_width,
-        height=height - 0.5,
-        font_size=11,
-        color=GRAY_70,
-    )
+    text_top = top + 0.08 + title_h + GAP_TIGHT
+    text_h = height - (0.08 + title_h + GAP_TIGHT + 0.05)
+    if text and text_h > 0.1:
+        add_text_box(
+            slide,
+            text,
+            left=text_left,
+            top=text_top,
+            width=text_width,
+            height=max(text_h, 0.15),
+            font_size=11,
+            color=GRAY_70,
+        )
 
 
 def add_highlight_box(
@@ -590,12 +753,19 @@ def add_highlight_box(
     }
     bg_color = bg_map.get(color, RGBColor(0x00, 0x1A, 0x33))
 
+    # Estimate height from content (use bold=True since highlight boxes
+    # commonly contain <strong> emphasis which widens character metrics)
+    inner_w = CONTENT_WIDTH - 0.4
+    has_bold = rich_runs and any(r.get("bold") for r in rich_runs)
+    text_h = _estimate_text_height(text, 14, inner_w, bold=has_bold or False)
+    box_h = max(0.5, text_h + 0.24)  # 0.12 pad top + bottom
+
     add_filled_box(
         slide,
         CONTENT_LEFT,
         top,
         CONTENT_WIDTH,
-        0.7,
+        box_h,
         fill_color=bg_color,
         border_color=color,
         border_width=1,
@@ -607,8 +777,8 @@ def add_highlight_box(
             rich_runs,
             left=CONTENT_LEFT + 0.2,
             top=top + 0.12,
-            width=CONTENT_WIDTH - 0.4,
-            height=0.5,
+            width=inner_w,
+            height=box_h - 0.24,
             font_size=14,
             default_color=WHITE,
         )
@@ -618,8 +788,8 @@ def add_highlight_box(
             text,
             left=CONTENT_LEFT + 0.2,
             top=top + 0.12,
-            width=CONTENT_WIDTH - 0.4,
-            height=0.5,
+            width=inner_w,
+            height=box_h - 0.24,
             font_size=14,
             color=WHITE,
         )
@@ -711,18 +881,21 @@ class HTMLToPPTXConverter:
 
         section_title = slide_div.find(class_="section-title")
         if section_title:
+            st_text = get_text(section_title)
+            st_height = _estimate_text_height(st_text, 20, CONTENT_WIDTH, bold=True)
+            st_height = max(0.40, min(st_height, 1.0))
             add_text_box(
                 slide,
-                get_text(section_title),
+                st_text,
                 left=CONTENT_LEFT,
                 top=current_top,
                 width=CONTENT_WIDTH,
-                height=0.5,
+                height=st_height,
                 font_size=20,
                 bold=True,
                 color=WHITE,
             )
-            current_top += 0.5 + GAP_NORMAL
+            current_top += st_height + GAP_NORMAL
             handled_elements.add(id(section_title))
 
         # ── Section label ────────────────────────────────────────────────────
@@ -753,9 +926,11 @@ class HTMLToPPTXConverter:
                 slide, text, top=current_top, size=size, center=is_centered, color=color
             )
             # Advance by dynamically estimated headline height + section gap
-            headline_height = _estimate_text_height(text, size, CONTENT_WIDTH)
+            headline_height = _estimate_text_height(
+                text, size, CONTENT_WIDTH, bold=True
+            )
             min_h = size / 72 * 1.2 + 0.1
-            headline_height = max(min_h, min(headline_height, 2.0))
+            headline_height = max(min_h, min(headline_height, 3.5))
             # Fixed 0.50" gap on centered/title slides for clean title-to-subtitle
             # spacing; regular slides use standard section gap.
             gap_after = 0.50 if is_centered else GAP_SECTION
@@ -773,8 +948,8 @@ class HTMLToPPTXConverter:
                 size=36,
                 center=is_centered,
             )
-            mh_height = _estimate_text_height(mh_text, 36, CONTENT_WIDTH)
-            mh_height = max(36 / 72 * 1.2 + 0.1, min(mh_height, 2.0))
+            mh_height = _estimate_text_height(mh_text, 36, CONTENT_WIDTH, bold=True)
+            mh_height = max(36 / 72 * 1.2 + 0.1, min(mh_height, 3.0))
             current_top += mh_height + GAP_SECTION
             handled_elements.add(id(medium_headline))
 
@@ -784,8 +959,11 @@ class HTMLToPPTXConverter:
             text = get_text(subhead)
             add_subhead(slide, text, top=current_top, center=is_centered)
             # Advance by the same box height that add_subhead() computed + gap
-            sub_height = _estimate_text_height(text, 24, CONTENT_WIDTH)
-            sub_height = max(0.5, min(sub_height, 1.5))  # must match add_subhead caps
+            sub_height = _estimate_text_height(text, 24, CONTENT_WIDTH, bold=False)
+            min_sub = 24 / 72 * 1.2 + 0.1
+            sub_height = max(
+                min_sub, min(sub_height, 2.5)
+            )  # must match add_subhead caps
             current_top += sub_height + GAP_NORMAL
             handled_elements.add(id(subhead))
 
@@ -822,10 +1000,13 @@ class HTMLToPPTXConverter:
             "grid-5",
             "tools-grid",
         ]
+        # Exclude stat/velocity grids (handled by _add_stats) and principles
+        # NOTE: BS4 class_=lambda receives individual class strings, not lists
+        _grid_exclude = {"principles-grid", "stat-grid", "velocity-grid"}
         card_containers = slide_div.find_all(
-            class_=lambda c: c
-            and any(gc in c for gc in grid_classes)
-            and "principles-grid" not in c  # handled by principle handler
+            class_=lambda c: (
+                c and any(gc in c for gc in grid_classes) and c not in _grid_exclude
+            )
         )
         for container in card_containers:
             if id(container) in handled_elements:
@@ -865,7 +1046,10 @@ class HTMLToPPTXConverter:
                     # Render non-card grid children as generic content
                     child_text = get_text(child)
                     if child_text and len(child_text) > 5:
-                        child_h = min(1.0, len(child_text) / 60 * 0.3 + 0.3)
+                        child_h = _estimate_text_height(child_text, 12, CONTENT_WIDTH)
+                        # Use full estimated height (cap at 6.0"); overflow
+                        # compression will reposition shapes to fit the slide.
+                        child_h = max(0.3, min(child_h, 6.0))
                         add_text_box(
                             slide,
                             child_text,
@@ -926,7 +1110,12 @@ class HTMLToPPTXConverter:
                     for child in direct_children:
                         child_text = get_text(child)
                         if child_text and len(child_text) > 5:
-                            child_h = min(1.2, len(child_text) / 60 * 0.3 + 0.3)
+                            child_h = _estimate_text_height(
+                                child_text, 12, CONTENT_WIDTH
+                            )
+                            # Use full estimated height (cap at 6.0"); overflow
+                            # compression will reposition shapes to fit the slide.
+                            child_h = max(0.3, min(child_h, 6.0))
                             add_text_box(
                                 slide,
                                 child_text,
@@ -963,11 +1152,10 @@ class HTMLToPPTXConverter:
             if id(p) not in handled_elements
         ]
         if principles:
-            self._add_principles(slide, principles, current_top)
+            p_row_height = self._add_principles(slide, principles, current_top)
             num_rows = -(-len(principles) // 2)  # ceil division
-            row_height = 0.85
             row_gap = 0.1
-            current_top += num_rows * (row_height + row_gap)
+            current_top += num_rows * (p_row_height + row_gap)
             for p in principles:
                 handled_elements.add(id(p))
             # Also mark the principles-grid container as handled
@@ -1063,25 +1251,29 @@ class HTMLToPPTXConverter:
                 number = get_text(num_el) if num_el else ""
                 unit = get_text(unit_el) if unit_el else ""
                 left = CONTENT_LEFT + i * width_per
+                num_h = _estimate_text_height(number, 56, width_per, bold=True)
+                num_h = max(1.05, num_h)  # 56pt needs ~1.03" minimum
                 add_text_box(
                     slide,
                     number,
                     left=left,
                     top=current_top,
                     width=width_per,
-                    height=0.8,
+                    height=num_h,
                     font_size=56,
                     bold=True,
                     color=MS_CYAN,
                     align=PP_ALIGN.CENTER,
                 )
+                unit_h = _estimate_text_height(unit, 18, width_per)
+                unit_h = max(0.4, unit_h)
                 add_text_box(
                     slide,
                     unit,
                     left=left,
-                    top=current_top + 0.8,
+                    top=current_top + num_h,
                     width=width_per,
-                    height=0.4,
+                    height=unit_h,
                     font_size=18,
                     color=GRAY_70,
                     align=PP_ALIGN.CENTER,
@@ -1093,71 +1285,92 @@ class HTMLToPPTXConverter:
         tier_stack = slide_div.find(class_="tier-stack")
         if tier_stack and id(tier_stack) not in handled_elements:
             tiers = tier_stack.find_all(class_="tier")
-            # Adaptive tier height: fit within remaining slide space
             num_tiers = len(tiers)
             available = SLIDE_HEIGHT - current_top - 0.4  # bottom margin
-            tier_h = min(0.85, (available - 0.08 * (num_tiers - 1)) / max(num_tiers, 1))
-            tier_h = max(tier_h, 0.55)  # minimum readable size
             tier_gap = 0.08
+            inner_w = CONTENT_WIDTH - 0.3
 
-            for i, tier in enumerate(tiers):
-                tier_top = current_top + i * (tier_h + tier_gap)
+            # First pass: extract content and compute needed tier height
+            tier_items: list[tuple[str, str, str]] = []
+            max_tier_need = 0.55  # minimum
+            for tier in tiers:
                 label_el = tier.find(class_="tier-label")
                 title_el = tier.find(class_="tier-title")
                 desc_el = tier.find(class_="tier-desc")
                 tokens_el = tier.find(class_="tier-tokens")
-
                 label = get_text(label_el) if label_el else ""
                 title = get_text(title_el) if title_el else ""
                 desc = get_text(desc_el) if desc_el else ""
                 tokens = get_text(tokens_el) if tokens_el else ""
+                combined = desc
+                if tokens:
+                    combined = f"{desc}  |  {tokens}" if desc else tokens
+                tier_items.append((label, title, combined))
+                lh = _estimate_text_height(label.upper(), 10, inner_w, bold=True)
+                th = _estimate_text_height(title, 12, inner_w, bold=True)
+                dh = _estimate_text_height(combined, 9, inner_w) if combined else 0.0
+                need = 0.05 + lh + th + 0.02 + dh + 0.05
+                max_tier_need = max(max_tier_need, need)
+
+            # Cap by available slide space
+            per_tier_avail = (available - tier_gap * (num_tiers - 1)) / max(
+                num_tiers, 1
+            )
+            tier_h = min(max_tier_need, per_tier_avail)
+            tier_h = max(tier_h, 0.55)
+
+            # Second pass: render
+            for i, (label, title, combined) in enumerate(tier_items):
+                tier_top = current_top + i * (tier_h + tier_gap)
 
                 # Background card
-                add_filled_box(
-                    slide, CONTENT_LEFT, tier_top, CONTENT_WIDTH, tier_h
-                )
+                add_filled_box(slide, CONTENT_LEFT, tier_top, CONTENT_WIDTH, tier_h)
                 # Label (e.g. "TIER 1: Discovery")
+                label_h = _estimate_text_height(label.upper(), 10, inner_w, bold=True)
                 add_text_box(
                     slide,
                     label.upper(),
                     left=CONTENT_LEFT + 0.15,
                     top=tier_top + 0.05,
-                    width=CONTENT_WIDTH - 0.3,
-                    height=0.20,
+                    width=inner_w,
+                    height=label_h,
                     font_size=10,
                     bold=True,
                     color=self.accent_color,
                 )
                 # Title
+                title_h = _estimate_text_height(title, 12, inner_w, bold=True)
+                title_top = tier_top + 0.05 + label_h
                 add_text_box(
                     slide,
                     title,
                     left=CONTENT_LEFT + 0.15,
-                    top=tier_top + 0.23,
-                    width=CONTENT_WIDTH - 0.3,
-                    height=0.20,
+                    top=title_top,
+                    width=inner_w,
+                    height=title_h,
                     font_size=12,
                     bold=True,
                     color=WHITE,
                 )
                 # Description + tokens
-                combined = desc
-                if tokens:
-                    combined = f"{desc}  |  {tokens}" if desc else tokens
-                desc_top = tier_top + 0.42
-                desc_h = tier_h - 0.47
+                desc_top = title_top + title_h + 0.02
+                desc_h = tier_h - (desc_top - tier_top) - 0.05
+                # Ensure desc box is tall enough for content
+                if combined:
+                    desc_est = _estimate_text_height(combined, 9, inner_w)
+                    desc_h = max(desc_h, desc_est)
                 if combined and desc_h > 0.08:
                     add_text_box(
                         slide,
                         combined,
                         left=CONTENT_LEFT + 0.15,
                         top=desc_top,
-                        width=CONTENT_WIDTH - 0.3,
+                        width=inner_w,
                         height=desc_h,
                         font_size=9,
                         color=GRAY_70,
                     )
-                handled_elements.add(id(tier))
+                handled_elements.add(id(tiers[i]))
             current_top += num_tiers * (tier_h + tier_gap) + GAP_SECTION
             handled_elements.add(id(tier_stack))
 
@@ -1205,7 +1418,7 @@ class HTMLToPPTXConverter:
             if boxes:
                 num_boxes = len(boxes)
                 gap_d = 0.15
-                arrow_w = 0.30
+                arrow_w = 0.45
                 total_arrows = num_boxes - 1
                 total_arrow_space = (
                     total_arrows * (arrow_w + 2 * gap_d) if total_arrows > 0 else 0
@@ -1261,9 +1474,9 @@ class HTMLToPPTXConverter:
                             slide,
                             "\u2192",
                             left=cur_left + gap_d,
-                            top=current_top + box_h / 2 - 0.12,
+                            top=current_top + box_h / 2 - 0.18,
                             width=arrow_w,
-                            height=0.25,
+                            height=0.40,
                             font_size=18,
                             bold=True,
                             color=self.accent_color,
@@ -1315,13 +1528,15 @@ class HTMLToPPTXConverter:
                     color=border_c,
                 )
                 if value:
+                    val_h = _estimate_text_height(value, 28, col_w - 0.24, bold=True)
+                    val_h = max(0.50, val_h)  # minimum for 28pt bold stats
                     add_text_box(
                         slide,
                         value,
                         left=ba_left + 0.12,
                         top=current_top + 0.38,
                         width=col_w - 0.24,
-                        height=0.35,
+                        height=val_h,
                         font_size=28,
                         bold=True,
                         color=WHITE,
@@ -1447,8 +1662,8 @@ class HTMLToPPTXConverter:
         for bt in body_texts:
             text = get_text(bt)
             if text:
-                bt_h = _estimate_text_height(text, 14, CONTENT_WIDTH)
-                bt_h = max(0.3, min(bt_h, 1.0))
+                bt_h = _estimate_text_height(text, 14, CONTENT_WIDTH, bold=False)
+                bt_h = max(0.3, min(bt_h, 3.5))
                 add_text_box(
                     slide,
                     text,
@@ -1469,18 +1684,20 @@ class HTMLToPPTXConverter:
             meta_text = get_text(title_meta)
             if meta_text:
                 meta_top = max(current_top, 4.5)
+                meta_h = _estimate_text_height(meta_text, 14, CONTENT_WIDTH, bold=False)
+                meta_h = max(0.3, min(meta_h, 1.5))
                 add_text_box(
                     slide,
                     meta_text,
                     left=CONTENT_LEFT,
                     top=meta_top,
                     width=CONTENT_WIDTH,
-                    height=0.4,
+                    height=meta_h,
                     font_size=14,
                     color=GRAY_50,
                     align=PP_ALIGN.CENTER if is_centered else PP_ALIGN.LEFT,
                 )
-                current_top = meta_top + 0.4
+                current_top = meta_top + meta_h
             handled_elements.add(id(title_meta))
 
         # ── Highlight boxes ──────────────────────────────────────────────────
@@ -1517,18 +1734,21 @@ class HTMLToPPTXConverter:
         for st in small_texts:
             if id(st) in handled_elements:
                 continue
+            st_text = get_text(st)
+            st_h = _estimate_text_height(st_text, 14, CONTENT_WIDTH, bold=False)
+            st_h = max(0.3, min(st_h, 1.5))
             add_text_box(
                 slide,
-                get_text(st),
+                st_text,
                 left=CONTENT_LEFT,
                 top=small_text_top,
                 width=CONTENT_WIDTH,
-                height=0.4,
+                height=st_h,
                 font_size=14,
                 color=GRAY_50,
                 align=PP_ALIGN.CENTER if is_centered else PP_ALIGN.LEFT,
             )
-            small_text_top += 0.4
+            small_text_top += st_h
             handled_elements.add(id(st))
         current_top = small_text_top
 
@@ -1559,7 +1779,12 @@ class HTMLToPPTXConverter:
             if hasattr(el, "get_text") and el.get_text(strip=True):
                 text = get_text(el)
                 if text and len(text) > 5:  # skip trivial fragments
-                    fb_height = min(1.0, len(text) / 80 * 0.3 + 0.3)
+                    fb_height = _estimate_text_height(
+                        text, 14, CONTENT_WIDTH, bold=False
+                    )
+                    # Use full estimated height (cap at 6.0") — overflow
+                    # compression will reposition shapes to fit the slide.
+                    fb_height = max(0.3, min(fb_height, 6.0))
                     add_text_box(
                         slide,
                         text,
@@ -1576,7 +1801,13 @@ class HTMLToPPTXConverter:
         # ── Overflow compression ─────────────────────────────────────────────
         # When content extends past slide height, proportionally compress
         # shape positions and heights to fit within the usable area.
-        if current_top > SLIDE_HEIGHT:
+        # Check both cursor AND actual shape bounds (shapes may extend
+        # past current_top when given generous content-based heights).
+        actual_bottom = current_top
+        for shape in slide.shapes:
+            s_bot = (shape.top + shape.height) / 914400
+            actual_bottom = max(actual_bottom, s_bot)
+        if actual_bottom > SLIDE_HEIGHT:
             usable = SLIDE_HEIGHT - 0.10  # leave 0.1" bottom margin
             # Find content bounds (skip shapes at very top like backgrounds)
             shape_tops = []
@@ -1596,22 +1827,37 @@ class HTMLToPPTXConverter:
                 if content_height > 0:
                     scale = (usable - content_start) / content_height
 
-                    if 0.60 < scale < 1.0:
+                    if 0.40 < scale < 1.0:
                         for shape in slide.shapes:
                             s_top = shape.top / 914400
                             if s_top >= content_start:
                                 rel_top = s_top - content_start
                                 new_top = content_start + rel_top * scale
                                 shape.top = int(new_top * 914400)
-                                shape.height = int(shape.height * scale)
-                    elif scale <= 0.60:
+                                # Do NOT compress heights — that causes text
+                                # overflow inside boxes.  Position-only
+                                # compression closes gaps without shrinking
+                                # text containers.
+                    elif scale <= 0.40:
+                        # Extreme overflow — position-only compression at
+                        # 40% floor (don't scale heights to avoid creating
+                        # text overflow inside boxes).
+                        floor_scale = 0.40
+                        for shape in slide.shapes:
+                            s_top = shape.top / 914400
+                            if s_top >= content_start:
+                                rel_top = s_top - content_start
+                                new_top = content_start + rel_top * floor_scale
+                                shape.top = int(new_top * 914400)
                         self.warnings.append(
                             f"Slide {slide_num}: severe overflow "
-                            f'({current_top:.1f}"), compression skipped '
-                            f"(would need {scale:.0%} scale)"
+                            f'({current_top:.1f}"), compressed at 40% floor '
+                            f"(needed {scale:.0%} scale)"
                         )
 
-    # ── Card layouts ─────────────────────────────────────────────────────────
+        # ── Auto-shrink safety net ──────────────────────────────────────
+
+    # ── Card layouts ───────────────────────────────────────────────────── ─────────────────────────────────────────────────────────
 
     def _add_cards(
         self, slide, cards: list[Tag], top: float, container: Optional[Tag] = None
@@ -1663,16 +1909,52 @@ class HTMLToPPTXConverter:
         card_width = (total_width - gap * (cols - 1)) / cols
         start_left = CONTENT_LEFT
 
-        # Adaptive card height: fit within remaining slide space
+        # Adaptive card height: estimate from content, fit within slide space
         available_height = SLIDE_HEIGHT - top - 0.3  # 0.3" bottom margin
         row_gap = 0.2  # gap between rows of cards
+
+        # Compute needed height for each card based on actual content
+        inner_w = card_width - 0.3  # text area inside card (0.15" pad each side)
+        max_needed = 0.8  # minimum card height
+        for card_el in cards:
+            card_classes = card_el.get("class", [])
+            if "module-card" in card_classes:
+                # Module cards have fixed proportional layout — use default
+                max_needed = max(max_needed, 1.8)
+                continue
+            title_el = card_el.find(class_=["card-title", "tool-name"])
+            text_el = card_el.find(class_=["card-text", "card-desc", "tool-desc"])
+            usage_el = card_el.find(class_="tool-usage")
+            number_el = card_el.find(class_="card-number")
+            t_title = get_text(title_el) if title_el else ""
+            t_text = get_text(text_el) if text_el else ""
+            if usage_el:
+                u = get_text(usage_el)
+                if u:
+                    t_text = f"{t_text}\n{u}" if t_text else u
+            if number_el:
+                # number cards need big number + title + desc
+                num_text = get_text(number_el)
+                num_font = max(24, min(48, int(1.8 * 28)))
+                text_est = _estimate_text_height(t_text, 10, inner_w) if t_text else 0.0
+                need = (
+                    0.08  # top pad
+                    + _estimate_text_height(num_text, num_font, inner_w, bold=True)
+                    + _estimate_text_height(t_title, 14, inner_w, bold=True)
+                    + text_est
+                    + 0.08  # bottom pad
+                )
+            else:
+                title_h = _estimate_text_height(t_title, 16, inner_w, bold=True) + 0.05
+                text_h = _estimate_text_height(t_text, 12, inner_w) if t_text else 0.0
+                need = 0.15 + title_h + GAP_TIGHT + text_h + 0.05
+            max_needed = max(max_needed, need)
+
         if num_rows == 1:
-            card_height = min(1.8, available_height)
+            card_height = min(max(max_needed, 0.8), available_height)
         else:
-            # Divide available space among rows with gaps between them
-            card_height = min(
-                1.8, (available_height - row_gap * (num_rows - 1)) / num_rows
-            )
+            per_row_avail = (available_height - row_gap * (num_rows - 1)) / num_rows
+            card_height = min(max(max_needed, 0.8), per_row_avail)
         card_height = max(card_height, 0.8)  # never smaller than 0.8"
 
         # Center cards if fewer than cols
@@ -1736,25 +2018,22 @@ class HTMLToPPTXConverter:
         # Return total height consumed by all rows
         return num_rows * card_height + (num_rows - 1) * row_gap
 
-    def _add_principles(self, slide, principles: list[Tag], top: float):
-        """Add numbered principle boxes in a two-column tenet layout."""
+    def _add_principles(self, slide, principles: list[Tag], top: float) -> float:
+        """Add numbered principle boxes in a two-column tenet layout.
+
+        Returns the row_height used (content-adaptive).
+        """
         cols = 2
         col_width = CONTENT_WIDTH / 2 - 0.1
-        row_height = 0.85
+        text_inner_w = col_width - 0.35  # text area width inside tenet
         row_gap = 0.1
 
+        # First pass: extract content and compute needed row height
+        items: list[tuple[str, str]] = []
+        max_needed = 0.85  # minimum row height
         for i, principle in enumerate(principles):
-            col = i % cols
-            row = i // cols
-            left = CONTENT_LEFT + col * (col_width + 0.2)
-            ptop = top + row * (row_height + row_gap)
-
-            num_el = principle.find(
-                class_=["principle-number", "principle-num"]
-            )
-            content_el = principle.find(
-                class_=["principle-content", "principle-text"]
-            )
+            num_el = principle.find(class_=["principle-number", "principle-num"])
+            content_el = principle.find(class_=["principle-content", "principle-text"])
             number = get_text(num_el) if num_el else str(i + 1)
             title = ""
             desc = ""
@@ -1768,18 +2047,33 @@ class HTMLToPPTXConverter:
                 elif strong:
                     # Pattern: <strong>Title</strong> Description text
                     title = get_text(strong)
-                    # Description is the remaining text after <strong>
                     strong.extract()
                     desc = get_text(content_el).strip()
                 elif p_tag:
                     title = get_text(p_tag)
                 else:
-                    # Flat text — use as title
                     title = get_text(content_el)
+
+            full_title = f"{number}. {title}"
+            items.append((full_title, desc))
+            # Estimate: top pad + title + gap + description + bottom pad
+            title_h = _estimate_text_height(full_title, 14, text_inner_w, bold=True)
+            desc_h = _estimate_text_height(desc, 11, text_inner_w) if desc else 0.0
+            need = 0.08 + title_h + GAP_TIGHT + desc_h + 0.05
+            max_needed = max(max_needed, need)
+
+        row_height = max_needed
+
+        # Second pass: place the tenet boxes
+        for i, (full_title, desc) in enumerate(items):
+            col = i % cols
+            row = i // cols
+            left = CONTENT_LEFT + col * (col_width + 0.2)
+            ptop = top + row * (row_height + row_gap)
 
             add_tenet(
                 slide,
-                f"{number}. {title}",
+                full_title,
                 desc,
                 left,
                 ptop,
@@ -1787,6 +2081,8 @@ class HTMLToPPTXConverter:
                 height=row_height,
                 accent_color=self.accent_color,
             )
+
+        return row_height
 
     def _add_module_card(
         self,
@@ -1878,18 +2174,23 @@ class HTMLToPPTXConverter:
 
         # Scale internal layout proportionally to card height
         pad = 0.08
-        num_h = min(0.7, height * 0.4)
-        title_h = min(0.3, height * 0.18)
+        inner_w = width - 0.2
         num_font = max(24, min(48, int(height * 28)))
         title_font = max(10, min(14, int(height * 8)))
         text_font = max(8, min(10, int(height * 6)))
+
+        # Estimate needed heights from actual content
+        num_h = _estimate_text_height(number, num_font, inner_w, bold=True)
+        num_h = max(0.5, min(num_h, height * 0.50))
+        title_h = _estimate_text_height(title, title_font, inner_w, bold=True)
+        title_h = max(0.25, min(title_h, height * 0.25))
 
         add_text_box(
             slide,
             number,
             left=left + 0.1,
             top=top + pad,
-            width=width - 0.2,
+            width=inner_w,
             height=num_h,
             font_size=num_font,
             bold=True,
@@ -1901,7 +2202,7 @@ class HTMLToPPTXConverter:
             title,
             left=left + 0.1,
             top=top + pad + num_h,
-            width=width - 0.2,
+            width=inner_w,
             height=title_h,
             font_size=title_font,
             bold=True,
@@ -1915,7 +2216,7 @@ class HTMLToPPTXConverter:
                 text,
                 left=left + 0.1,
                 top=top + pad + num_h + title_h,
-                width=width - 0.2,
+                width=inner_w,
                 height=remaining,
                 font_size=text_font,
                 color=GRAY_70,
@@ -1929,8 +2230,12 @@ class HTMLToPPTXConverter:
         # Extract structured code runs from HTML spans
         code_runs = self._extract_code_runs(code_el)
         plain_text = get_text(code_el)
-        lines = plain_text.count("\n") + 1
-        height = max(1.0, min(lines * 0.18 + 0.3, 3.5))
+        # Estimate height from actual content; monospace chars are ~20% wider
+        # than Arial so multiply estimate by 1.15 to account for extra wrapping.
+        text_h = _estimate_text_height(
+            plain_text, 10, CONTENT_WIDTH - 0.4, line_spacing=1.15
+        )
+        height = max(1.0, min(text_h * 1.15 + 0.24, 4.5))
 
         # Dark background
         add_filled_box(
@@ -2005,8 +2310,12 @@ class HTMLToPPTXConverter:
         """Add a code block at a specific position and width (for side-by-side grids)."""
         code_runs = self._extract_code_runs(code_el)
         plain_text = get_text(code_el)
-        lines = plain_text.count("\n") + 1
-        height = max(1.0, min(lines * 0.18 + 0.3, 3.5))
+        # Estimate height from content; 1.15× for monospace char-width difference
+        pad = 0.15
+        text_h = _estimate_text_height(
+            plain_text, 9, width - 2 * pad, line_spacing=1.15
+        )
+        height = max(1.0, min(text_h * 1.15 + 0.20, 3.5))
 
         # Dark background
         add_filled_box(
@@ -2157,39 +2466,48 @@ class HTMLToPPTXConverter:
 
         if num_el and title_el:
             # Number + Title on one line
+            _ft_text = f"{get_text(num_el)}. {get_text(title_el)}"
+            _ft_h = _estimate_text_height(_ft_text, 14, inner_w, bold=True)
+            _ft_h = max(0.30, min(_ft_h, 0.60))
             add_text_box(
                 slide,
-                f"{get_text(num_el)}. {get_text(title_el)}",
+                _ft_text,
                 left=left + pad_x,
                 top=y,
                 width=inner_w,
-                height=0.30,
+                height=_ft_h,
                 font_size=14,
                 bold=True,
                 color=WHITE,
             )
-            y += 0.30
+            y += _ft_h
         elif title_el:
+            _ft_text = get_text(title_el)
+            _ft_h = _estimate_text_height(_ft_text, 14, inner_w, bold=True)
+            _ft_h = max(0.30, min(_ft_h, 0.60))
             add_text_box(
                 slide,
-                get_text(title_el),
+                _ft_text,
                 left=left + pad_x,
                 top=y,
                 width=inner_w,
-                height=0.30,
+                height=_ft_h,
                 font_size=14,
                 bold=True,
                 color=WHITE,
                 align=PP_ALIGN.CENTER,
             )
-            y += 0.30
+            y += _ft_h
 
         if desc_el:
-            desc_h = min(0.40, height - (y - top) - 0.10)
+            desc_text = get_text(desc_el)
+            desc_needed = _estimate_text_height(desc_text, 11, inner_w)
+            # Use estimated height — allow text box to extend if step box is tight
+            desc_h = desc_needed
             if desc_h > 0.10:
                 add_text_box(
                     slide,
-                    get_text(desc_el),
+                    desc_text,
                     left=left + pad_x,
                     top=y,
                     width=inner_w,
@@ -2200,15 +2518,18 @@ class HTMLToPPTXConverter:
                 y += desc_h
 
         if turns_el:
+            turns_text = get_text(turns_el)
+            turns_needed = _estimate_text_height(turns_text, 10, inner_w)
             remaining = height - (y - top) - 0.05
-            if remaining > 0.15:
+            turns_h = max(remaining, turns_needed)
+            if turns_h > 0.10:
                 add_text_box(
                     slide,
-                    get_text(turns_el),
+                    turns_text,
                     left=left + pad_x,
                     top=y,
                     width=inner_w,
-                    height=remaining,
+                    height=turns_h,
                     font_size=10,
                     italic=True,
                     color=self.accent_color,
@@ -2244,7 +2565,34 @@ class HTMLToPPTXConverter:
             gap = 0.20
             row_gap = 0.25
             box_width = (CONTENT_WIDTH - gap * (cols - 1)) / cols
-            box_height = 1.05
+
+            # Content-aware box height: scan all steps for needed height
+            pad_x = 0.12
+            inner_w = box_width - 2 * pad_x
+            max_step_need = 1.05  # minimum
+            for step in steps:
+                need = 0.08  # top pad
+                t_el = step.find(
+                    class_=["flow-step-title", "workflow-step-title", "step-title"]
+                )
+                n_el = step.find(class_="step-number")
+                if t_el or n_el:
+                    need += 0.30  # title row
+                d_el = step.find(
+                    class_=["flow-step-desc", "workflow-step-desc", "step-desc"]
+                )
+                if d_el:
+                    need += _estimate_text_height(get_text(d_el), 11, inner_w)
+                tu_el = step.find(class_="step-turns")
+                if tu_el:
+                    need += _estimate_text_height(get_text(tu_el), 10, inner_w)
+                need += 0.05  # bottom pad
+                max_step_need = max(max_step_need, need)
+            # Cap by available slide space
+            avail_per_row = (SLIDE_HEIGHT - top - 0.3 - (num_rows - 1) * row_gap) / max(
+                num_rows, 1
+            )
+            box_height = min(max_step_need, avail_per_row)
 
             for i, step in enumerate(steps):
                 col = i % cols
@@ -2268,14 +2616,14 @@ class HTMLToPPTXConverter:
 
                 # Horizontal arrow to next box in same row (not at row end)
                 if col < cols - 1 and i < num_steps - 1:
-                    arrow_x = left + box_width + gap / 2 - 0.10
+                    arrow_x = left + box_width + gap / 2 - 0.22
                     add_text_box(
                         slide,
                         "\u2192",
                         left=arrow_x,
-                        top=rtop + box_height / 2 - 0.12,
-                        width=0.20,
-                        height=0.25,
+                        top=rtop + box_height / 2 - 0.22,
+                        width=0.45,
+                        height=0.45,
                         font_size=16,
                         bold=True,
                         color=self.accent_color,
@@ -2286,7 +2634,7 @@ class HTMLToPPTXConverter:
 
         # ── Single-row flow (≤4 steps) ───────────────────────────────────
         gap = 0.15
-        arrow_width = 0.35
+        arrow_width = 0.45
         total_arrows = num_steps - 1
         total_arrow_space = (
             total_arrows * (arrow_width + 2 * gap) if total_arrows > 0 else 0
@@ -2321,14 +2669,14 @@ class HTMLToPPTXConverter:
             # Arrow between steps
             if i < num_steps - 1:
                 arrow_left = current_left + gap
-                arrow_top = top + box_height / 2 - 0.12
+                arrow_top = top + box_height / 2 - 0.22
                 add_text_box(
                     slide,
                     "\u2192",
                     left=arrow_left,
                     top=arrow_top,
                     width=arrow_width,
-                    height=0.25,
+                    height=0.45,
                     font_size=20,
                     bold=True,
                     color=self.accent_color,
@@ -2433,8 +2781,12 @@ class HTMLToPPTXConverter:
             return
 
         col_width = CONTENT_WIDTH / 2
-        row_height = 0.32
         current_row_top = top
+
+        # Pre-scan to pair left/right cells and compute row heights
+        # Children alternate: left, right, left, right...
+        pending_left_text: Optional[str] = None
+        left_h: float = 0.32  # default; updated when left cell is seen
 
         for child in children:
             classes = child.get("class", [])
@@ -2443,6 +2795,15 @@ class HTMLToPPTXConverter:
             is_left = "left" in classes
             is_right = "right" in classes
 
+            fs = 13 if is_header else 11
+            cell_h = _estimate_text_height(text, fs, col_width, bold=is_header)
+            cell_h = max(0.28, min(cell_h, 0.8))
+
+            if is_left:
+                # Compute left-side height; store for pairing with right
+                left_h = cell_h
+                pending_left_text = text
+
             if is_header and is_left:
                 add_text_box(
                     slide,
@@ -2450,47 +2811,52 @@ class HTMLToPPTXConverter:
                     left=CONTENT_LEFT,
                     top=current_row_top,
                     width=col_width,
-                    height=row_height,
+                    height=cell_h,
                     font_size=13,
                     bold=True,
                     color=self.accent_color,
                 )
             elif is_header and is_right:
+                # Use max of left and right heights for this row
+                row_h = max(left_h, cell_h) if pending_left_text is not None else cell_h
                 add_text_box(
                     slide,
                     text,
                     left=CONTENT_LEFT + col_width,
                     top=current_row_top,
                     width=col_width,
-                    height=row_height,
+                    height=row_h,
                     font_size=13,
                     bold=True,
                     color=CODE_GREEN,
                 )
-                current_row_top += row_height + 0.05
-            elif is_left:
+                current_row_top += row_h + 0.05
+                pending_left_text = None
+            elif is_left and not is_header:
                 add_text_box(
                     slide,
                     text,
                     left=CONTENT_LEFT,
                     top=current_row_top,
                     width=col_width,
-                    height=row_height,
+                    height=cell_h,
                     font_size=11,
                     color=WHITE,
                 )
-            elif is_right:
+            elif is_right and not is_header:
+                row_h = max(left_h, cell_h) if pending_left_text is not None else cell_h
                 add_text_box(
                     slide,
                     text,
                     left=CONTENT_LEFT + col_width,
                     top=current_row_top,
                     width=col_width,
-                    height=row_height,
+                    height=row_h,
                     font_size=11,
                     color=GRAY_70,
                 )
-                current_row_top += row_height
+                current_row_top += row_h
+                pending_left_text = None
 
     # ── Architecture diagram ─────────────────────────────────────────────────
 
@@ -2669,21 +3035,40 @@ class HTMLToPPTXConverter:
         if not rows:
             return
 
-        row_height = 0.32
+        # Pre-compute column widths
+        sample_cells = rows[0].find_all(["th", "td"]) if rows else []
+        num_cols = len(sample_cells)
+        if num_cols == 0:
+            return
+        col_widths = [CONTENT_WIDTH / num_cols] * num_cols
+        if num_cols == 3:
+            col_widths = [2.5, 2.5, 3.4]
+        elif num_cols == 2:
+            col_widths = [4.2, 4.2]
+
+        # Pre-compute per-row heights based on content
+        row_heights: list[float] = []
+        for row in rows:
+            cells = row.find_all(["th", "td"])
+            is_header = row.find("th") is not None
+            fs = 12 if is_header else 11
+            max_h = 0.32  # minimum row height
+            for col_idx, cell in enumerate(cells):
+                cw = col_widths[col_idx] if col_idx < len(col_widths) else 2.0
+                cell_bold = is_header or col_idx == 0
+                h = _estimate_text_height(get_text(cell), fs, cw, bold=cell_bold)
+                max_h = max(max_h, h)
+            row_heights.append(min(max_h, 0.8))  # cap individual rows
+
+        current_row_top = top
         for row_idx, row in enumerate(rows):
             cells = row.find_all(["th", "td"])
             is_header = row.find("th") is not None
-            num_cols = len(cells)
-
-            # Calculate column widths
-            if num_cols == 0:
+            r_num_cols = len(cells)
+            if r_num_cols == 0:
                 continue
-            col_widths = [CONTENT_WIDTH / num_cols] * num_cols
-            if num_cols == 3:
-                col_widths = [2.5, 2.5, 3.4]
-            elif num_cols == 2:
-                col_widths = [4.2, 4.2]
 
+            rh = row_heights[row_idx]
             left = CONTENT_LEFT
             for col_idx, cell in enumerate(cells):
                 text = get_text(cell)
@@ -2719,14 +3104,15 @@ class HTMLToPPTXConverter:
                     slide,
                     text,
                     left=left,
-                    top=top + row_idx * row_height,
+                    top=current_row_top,
                     width=width,
-                    height=row_height,
+                    height=rh,
                     font_size=font_size,
                     bold=bold,
                     color=color,
                 )
                 left += width
+            current_row_top += rh
 
     # ── Feature lists ────────────────────────────────────────────────────────
 
@@ -2786,25 +3172,29 @@ class HTMLToPPTXConverter:
 
             left = start_left + i * width_per_stat
 
+            num_h = _estimate_text_height(number, 40, width_per_stat, bold=True)
+            num_h = max(0.6, min(num_h, 1.2))
             add_text_box(
                 slide,
                 number,
                 left=left,
                 top=top,
                 width=width_per_stat,
-                height=0.6,
+                height=num_h,
                 font_size=40,
                 bold=True,
                 color=MS_CYAN,
                 align=PP_ALIGN.CENTER,
             )
+            label_h = _estimate_text_height(label, 12, width_per_stat)
+            label_h = max(0.3, min(label_h, 0.6))
             add_text_box(
                 slide,
                 label,
                 left=left,
-                top=top + 0.6,
+                top=top + num_h,
                 width=width_per_stat,
-                height=0.4,
+                height=label_h,
                 font_size=12,
                 color=GRAY_70,
                 align=PP_ALIGN.CENTER,
@@ -2815,13 +3205,15 @@ class HTMLToPPTXConverter:
     def _add_quote(self, slide, quote: Tag, top: float):
         """Add a quote to the slide."""
         text = get_text(quote)
+        q_h = _estimate_text_height(f'"{text}"', 24, CONTENT_WIDTH)
+        q_h = max(0.6, q_h)
         add_text_box(
             slide,
             f'"{text}"',
             left=CONTENT_LEFT,
             top=top,
             width=CONTENT_WIDTH,
-            height=1.2,
+            height=q_h,
             font_size=24,
             italic=True,
             color=WHITE,
@@ -2835,7 +3227,7 @@ class HTMLToPPTXConverter:
                 slide,
                 get_text(attribution),
                 left=CONTENT_LEFT,
-                top=top + 1.2,
+                top=top + q_h,
                 width=CONTENT_WIDTH,
                 height=0.3,
                 font_size=14,
