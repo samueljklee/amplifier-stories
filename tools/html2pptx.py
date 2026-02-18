@@ -525,6 +525,56 @@ def _estimate_text_height(
     return num_lines * line_height + 0.10  # 0.10" for text-frame margins
 
 
+def _truncate_to_fit(
+    text: str,
+    font_size_pt: int,
+    box_width_inches: float,
+    max_height_inches: float,
+    bold: bool = False,
+) -> str:
+    """Truncate text so it fits within max_height_inches at the given font size.
+
+    Uses binary search on paragraph boundaries to find the longest prefix
+    that fits, appending '...' when truncation is needed.
+    """
+    if (
+        _estimate_text_height(text, font_size_pt, box_width_inches, bold=bold)
+        <= max_height_inches
+    ):
+        return text  # already fits
+
+    paragraphs = text.split("\n")
+    # Binary search for how many paragraphs fit
+    lo, hi = 0, len(paragraphs)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        candidate = "\n".join(paragraphs[:mid]) + "\n..."
+        if (
+            _estimate_text_height(candidate, font_size_pt, box_width_inches, bold=bold)
+            <= max_height_inches
+        ):
+            lo = mid
+        else:
+            hi = mid - 1
+    if lo > 0:
+        return "\n".join(paragraphs[:lo]) + "\n..."
+
+    # Single long paragraph — truncate by characters
+    words = text.split()
+    lo, hi = 0, len(words)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        candidate = " ".join(words[:mid]) + "..."
+        if (
+            _estimate_text_height(candidate, font_size_pt, box_width_inches, bold=bold)
+            <= max_height_inches
+        ):
+            lo = mid
+        else:
+            hi = mid - 1
+    return " ".join(words[: max(lo, 1)]) + "..."
+
+
 def add_section_label(slide, text: str, top: float = 0.6, color: RGBColor = MS_BLUE):
     """Add a colored uppercase section label."""
     return add_text_box(
@@ -1046,10 +1096,11 @@ class HTMLToPPTXConverter:
                     # Render non-card grid children as generic content
                     child_text = get_text(child)
                     if child_text and len(child_text) > 5:
+                        child_text = _truncate_to_fit(
+                            child_text, 12, CONTENT_WIDTH, 5.5
+                        )
                         child_h = _estimate_text_height(child_text, 12, CONTENT_WIDTH)
-                        # Use full estimated height (cap at 6.0"); overflow
-                        # compression will reposition shapes to fit the slide.
-                        child_h = max(0.3, min(child_h, 6.0))
+                        child_h = max(0.3, child_h)
                         add_text_box(
                             slide,
                             child_text,
@@ -1110,12 +1161,13 @@ class HTMLToPPTXConverter:
                     for child in direct_children:
                         child_text = get_text(child)
                         if child_text and len(child_text) > 5:
+                            child_text = _truncate_to_fit(
+                                child_text, 12, CONTENT_WIDTH, 5.5
+                            )
                             child_h = _estimate_text_height(
                                 child_text, 12, CONTENT_WIDTH
                             )
-                            # Use full estimated height (cap at 6.0"); overflow
-                            # compression will reposition shapes to fit the slide.
-                            child_h = max(0.3, min(child_h, 6.0))
+                            child_h = max(0.3, child_h)
                             add_text_box(
                                 slide,
                                 child_text,
@@ -1383,16 +1435,22 @@ class HTMLToPPTXConverter:
         if tier_rows:
             # Header row
             cols_w = [1.8, 4.0, 2.6]
-            for i, tr in enumerate(tier_rows):
+            tier_top = current_top
+            for tr in tier_rows:
                 name_el = tr.find(class_="tier-name")
                 uses_el = tr.find(class_="tier-uses")
                 cost_el = tr.find(class_="tier-cost")
-                row_top = current_top + i * 0.40
                 vals = [
                     get_text(name_el) if name_el else "",
                     get_text(uses_el) if uses_el else "",
                     get_text(cost_el) if cost_el else "",
                 ]
+                # Compute max row height across columns
+                row_h = 0.35
+                for j, val in enumerate(vals):
+                    w = cols_w[j] if j < len(cols_w) else 2.0
+                    h = _estimate_text_height(val, 12, w, bold=(j == 0))
+                    row_h = max(row_h, h)
                 left = CONTENT_LEFT
                 for j, val in enumerate(vals):
                     w = cols_w[j] if j < len(cols_w) else 2.0
@@ -1400,16 +1458,17 @@ class HTMLToPPTXConverter:
                         slide,
                         val,
                         left=left,
-                        top=row_top,
+                        top=tier_top,
                         width=w,
-                        height=0.35,
+                        height=row_h,
                         font_size=12,
                         bold=(j == 0),
                         color=self.accent_color if j == 0 else GRAY_70,
                     )
                     left += w
                 handled_elements.add(id(tr))
-            current_top += len(tier_rows) * 0.40 + GAP_SECTION
+                tier_top += row_h + 0.05
+            current_top = tier_top + GAP_SECTION
 
         # ── Diagram boxes (shadow-environments style flow) ───────────────────
         diagram = slide_div.find(class_="diagram")
@@ -1428,7 +1487,20 @@ class HTMLToPPTXConverter:
                 )
                 total_w = num_boxes * box_w + total_arrow_space
                 cur_left = CONTENT_LEFT + (CONTENT_WIDTH - total_w) / 2
+
+                # Pre-scan boxes to compute uniform height
+                inner_w = box_w - 0.16
                 box_h = 0.80
+                for box_el in boxes:
+                    te = box_el.find(class_="diagram-box-title")
+                    ce = box_el.find(class_="diagram-box-content")
+                    th = (
+                        _estimate_text_height(get_text(te), 12, inner_w, bold=True)
+                        if te
+                        else 0.30
+                    )
+                    ch = _estimate_text_height(get_text(ce), 10, inner_w) if ce else 0.0
+                    box_h = max(box_h, th + ch + 0.24)
 
                 for bi, box_el in enumerate(boxes):
                     title_el = box_el.find(class_="diagram-box-title")
@@ -1443,27 +1515,34 @@ class HTMLToPPTXConverter:
                         border_color=self.accent_color,
                         border_width=1,
                     )
+                    t_h = 0.30
                     if title_el:
+                        t_text = get_text(title_el)
+                        t_h = _estimate_text_height(t_text, 12, inner_w, bold=True)
+                        t_h = max(0.30, t_h)
                         add_text_box(
                             slide,
-                            get_text(title_el),
+                            t_text,
                             left=cur_left + 0.08,
                             top=current_top + 0.08,
-                            width=box_w - 0.16,
-                            height=0.30,
+                            width=inner_w,
+                            height=t_h,
                             font_size=12,
                             bold=True,
                             color=WHITE,
                             align=PP_ALIGN.CENTER,
                         )
                     if content_el:
+                        c_text = get_text(content_el)
+                        c_h = _estimate_text_height(c_text, 10, inner_w)
+                        c_h = max(0.25, min(c_h, box_h - t_h - 0.16))
                         add_text_box(
                             slide,
-                            get_text(content_el),
+                            c_text,
                             left=cur_left + 0.08,
-                            top=current_top + 0.38,
-                            width=box_w - 0.16,
-                            height=0.35,
+                            top=current_top + 0.08 + t_h,
+                            width=inner_w,
+                            height=c_h,
                             font_size=10,
                             color=GRAY_70,
                             align=PP_ALIGN.CENTER,
@@ -1516,13 +1595,15 @@ class HTMLToPPTXConverter:
                     border_color=border_c,
                     border_width=1,
                 )
+                label_h = _estimate_text_height(label, 14, col_w - 0.24, bold=True)
+                label_h = max(0.30, label_h)
                 add_text_box(
                     slide,
                     label,
                     left=ba_left + 0.12,
                     top=current_top + 0.08,
                     width=col_w - 0.24,
-                    height=0.30,
+                    height=label_h,
                     font_size=14,
                     bold=True,
                     color=border_c,
@@ -1544,13 +1625,15 @@ class HTMLToPPTXConverter:
                 # Remaining description below value
                 remaining_text = desc.replace(label, "").replace(value, "").strip()
                 if remaining_text and len(remaining_text) > 5:
+                    desc_h = _estimate_text_height(remaining_text, 10, col_w - 0.24)
+                    desc_h = max(0.30, min(desc_h, 0.45))
                     add_text_box(
                         slide,
                         remaining_text,
                         left=ba_left + 0.12,
                         top=current_top + 0.75,
                         width=col_w - 0.24,
-                        height=0.40,
+                        height=desc_h,
                         font_size=10,
                         color=GRAY_70,
                     )
@@ -1596,33 +1679,42 @@ class HTMLToPPTXConverter:
         if good_patterns or bad_patterns:
             col_w = CONTENT_WIDTH / 2 - 0.1
             # Bad patterns on left
-            for i, bp in enumerate(bad_patterns):
+            bad_top = current_top
+            for bp in bad_patterns:
+                bp_text = f"\u2717 {get_text(bp)}"
+                bp_h = _estimate_text_height(bp_text, 13, col_w)
+                bp_h = max(0.30, bp_h)
                 add_text_box(
                     slide,
-                    f"\u2717 {get_text(bp)}",
+                    bp_text,
                     left=CONTENT_LEFT,
-                    top=current_top + i * 0.32,
+                    top=bad_top,
                     width=col_w,
-                    height=0.30,
+                    height=bp_h,
                     font_size=13,
                     color=MS_RED,
                 )
                 handled_elements.add(id(bp))
+                bad_top += bp_h + 0.02
             # Good patterns on right
-            for i, gp in enumerate(good_patterns):
+            good_top = current_top
+            for gp in good_patterns:
+                gp_text = f"\u2713 {get_text(gp)}"
+                gp_h = _estimate_text_height(gp_text, 13, col_w)
+                gp_h = max(0.30, gp_h)
                 add_text_box(
                     slide,
-                    f"\u2713 {get_text(gp)}",
+                    gp_text,
                     left=CONTENT_LEFT + col_w + 0.2,
-                    top=current_top + i * 0.32,
+                    top=good_top,
                     width=col_w,
-                    height=0.30,
+                    height=gp_h,
                     font_size=13,
                     color=MS_GREEN,
                 )
                 handled_elements.add(id(gp))
-            max_items = max(len(good_patterns), len(bad_patterns))
-            current_top += max_items * 0.32 + GAP_SECTION
+                good_top += gp_h + 0.02
+            current_top = max(bad_top, good_top) + GAP_SECTION
 
         # ── Summary rows (table-like summary) ────────────────────────────────
         summary_rows = [
@@ -1631,27 +1723,35 @@ class HTMLToPPTXConverter:
             if id(sr) not in handled_elements
         ]
         if summary_rows:
+            sr_top = current_top
             for i, sr in enumerate(summary_rows):
                 cells = sr.find_all(class_="summary-cell")
                 num_cells = len(cells) or 1
                 cell_w = CONTENT_WIDTH / num_cells
+                is_first_row = i == 0
+                fs = 12 if is_first_row else 11
+                row_h = 0.30
                 for j, cell in enumerate(cells):
                     text = get_text(cell)
-                    is_first_row = i == 0
+                    cell_h = _estimate_text_height(text, fs, cell_w, bold=is_first_row)
+                    row_h = max(row_h, cell_h)
+                for j, cell in enumerate(cells):
+                    text = get_text(cell)
                     add_text_box(
                         slide,
                         text,
                         left=CONTENT_LEFT + j * cell_w,
-                        top=current_top + i * 0.32,
+                        top=sr_top,
                         width=cell_w,
-                        height=0.30,
-                        font_size=12 if is_first_row else 11,
+                        height=row_h,
+                        font_size=fs,
                         bold=is_first_row,
                         color=self.accent_color if is_first_row else GRAY_70,
                     )
                     handled_elements.add(id(cell))
                 handled_elements.add(id(sr))
-            current_top += len(summary_rows) * 0.32 + GAP_SECTION
+                sr_top += row_h + 0.02
+            current_top = sr_top + GAP_SECTION
 
         # ── Body text paragraphs ─────────────────────────────────────────────
         body_texts = [
@@ -1779,12 +1879,11 @@ class HTMLToPPTXConverter:
             if hasattr(el, "get_text") and el.get_text(strip=True):
                 text = get_text(el)
                 if text and len(text) > 5:  # skip trivial fragments
+                    text = _truncate_to_fit(text, 14, CONTENT_WIDTH, 5.5)
                     fb_height = _estimate_text_height(
                         text, 14, CONTENT_WIDTH, bold=False
                     )
-                    # Use full estimated height (cap at 6.0") — overflow
-                    # compression will reposition shapes to fit the slide.
-                    fb_height = max(0.3, min(fb_height, 6.0))
+                    fb_height = max(0.3, fb_height)
                     add_text_box(
                         slide,
                         text,
@@ -2105,23 +2204,26 @@ class HTMLToPPTXConverter:
         bar.fill.fore_color.rgb = self.accent_color
         bar.line.fill.background()
 
-        # Scale internal layout proportionally
+        # Scale internal layout using content-aware heights
         pad = 0.10
-        name_h = min(0.3, height * 0.2)
-        contract_h = min(0.25, height * 0.15)
+        inner_w = width - 0.24
         y_cursor = top + pad
 
         # Module name
         name_el = card_el.find(class_="module-name")
+        name_fs = max(11, min(15, int(height * 9)))
         if name_el:
+            name_text = get_text(name_el)
+            name_h = _estimate_text_height(name_text, name_fs, inner_w, bold=True)
+            name_h = max(0.25, min(name_h, height * 0.30))
             add_text_box(
                 slide,
-                get_text(name_el),
+                name_text,
                 left=left + 0.12,
                 top=y_cursor,
-                width=width - 0.24,
+                width=inner_w,
                 height=name_h,
-                font_size=max(11, min(15, int(height * 9))),
+                font_size=name_fs,
                 bold=True,
                 color=self.accent_color,
             )
@@ -2129,15 +2231,19 @@ class HTMLToPPTXConverter:
 
         # Contract (monospace)
         contract_el = card_el.find(class_="module-contract")
+        contract_fs = max(8, min(10, int(height * 6)))
         if contract_el:
+            contract_text = get_text(contract_el)
+            contract_h = _estimate_text_height(contract_text, contract_fs, inner_w)
+            contract_h = max(0.20, min(contract_h, height * 0.25))
             add_text_box(
                 slide,
-                get_text(contract_el),
+                contract_text,
                 left=left + 0.12,
                 top=y_cursor,
-                width=width - 0.24,
+                width=inner_w,
                 height=contract_h,
-                font_size=max(8, min(10, int(height * 6))),
+                font_size=contract_fs,
                 font_name=CODE_FONT,
                 color=CODE_GREEN,
             )
@@ -2642,7 +2748,31 @@ class HTMLToPPTXConverter:
         remaining = CONTENT_WIDTH - total_arrow_space
         box_width = remaining / num_steps
         box_width = min(box_width, 2.5)
-        box_height = 0.9
+
+        # Content-aware height (same scan as multi-row path)
+        pad_x = 0.12
+        sr_inner_w = box_width - 2 * pad_x
+        box_height = 0.9  # minimum
+        for step in steps:
+            need = 0.08
+            t_el = step.find(
+                class_=["flow-step-title", "workflow-step-title", "step-title"]
+            )
+            n_el = step.find(class_="step-number")
+            if t_el or n_el:
+                need += 0.30
+            d_el = step.find(
+                class_=["flow-step-desc", "workflow-step-desc", "step-desc"]
+            )
+            if d_el:
+                need += _estimate_text_height(get_text(d_el), 11, sr_inner_w)
+            tu_el = step.find(class_="step-turns")
+            if tu_el:
+                need += _estimate_text_height(get_text(tu_el), 10, sr_inner_w)
+            need += 0.05
+            box_height = max(box_height, need)
+        # Cap to available slide space
+        box_height = min(box_height, SLIDE_HEIGHT - top - 0.3)
 
         # Center the whole diagram
         total_width = num_steps * box_width + total_arrow_space
@@ -2750,24 +2880,29 @@ class HTMLToPPTXConverter:
             title = get_text(title_el) if title_el else ""
             body = get_text(body_el) if body_el else ""
 
+            notif_w = total_width - 0.70
+            title_h = _estimate_text_height(title, 12, notif_w, bold=True)
+            title_h = max(0.22, min(title_h, row_height * 0.5))
             add_text_box(
                 slide,
                 title,
                 left=start_left + 0.5,
                 top=ntop + 0.04,
-                width=total_width - 0.7,
-                height=0.25,
+                width=notif_w,
+                height=title_h,
                 font_size=12,
                 bold=True,
                 color=WHITE,
             )
+            body_h = _estimate_text_height(body, 10, notif_w)
+            body_h = max(0.20, min(body_h, row_height - title_h - 0.08))
             add_text_box(
                 slide,
-                body,
+                _truncate_to_fit(body, 10, notif_w, body_h),
                 left=start_left + 0.5,
-                top=ntop + 0.27,
-                width=total_width - 0.70,
-                height=0.25,
+                top=ntop + 0.04 + title_h,
+                width=notif_w,
+                height=body_h,
                 font_size=10,
                 color=GRAY_70,
             )
@@ -2975,18 +3110,22 @@ class HTMLToPPTXConverter:
             base_left = CONTENT_LEFT if side_idx == 0 else 5.5
 
             title_el = side.find(class_="versus-title")
+            title_h = 0.4
             if title_el:
                 classes = title_el.get("class", [])
                 color = parse_color_from_class(classes) or (
                     MS_ORANGE if side_idx == 0 else MS_GREEN
                 )
+                vs_title_text = get_text(title_el)
+                title_h = _estimate_text_height(vs_title_text, 24, 4.0, bold=True)
+                title_h = max(0.4, title_h)
                 add_text_box(
                     slide,
-                    get_text(title_el),
+                    vs_title_text,
                     left=base_left,
                     top=top,
                     width=4.0,
-                    height=0.4,
+                    height=title_h,
                     font_size=24,
                     bold=True,
                     color=color,
@@ -2994,7 +3133,8 @@ class HTMLToPPTXConverter:
 
             items_list = side.find(class_="feature-list")
             if items_list:
-                for i, item in enumerate(items_list.find_all("li")):
+                item_top = top + title_h + 0.1
+                for item in items_list.find_all("li"):
                     text = get_text(item)
                     if "\u2713" in text:
                         color = MS_GREEN
@@ -3002,16 +3142,19 @@ class HTMLToPPTXConverter:
                         color = MS_RED
                     else:
                         color = WHITE
+                    item_h = _estimate_text_height(text, 14, 4.0)
+                    item_h = max(0.30, item_h)
                     add_text_box(
                         slide,
                         text,
                         left=base_left,
-                        top=top + 0.5 + i * 0.35,
+                        top=item_top,
                         width=4.0,
-                        height=0.35,
+                        height=item_h,
                         font_size=14,
                         color=color,
                     )
+                    item_top += item_h
 
         # VS divider
         add_text_box(
@@ -3119,7 +3262,8 @@ class HTMLToPPTXConverter:
     def _add_feature_list(self, slide, feature_list: Tag, top: float):
         """Add a feature list to the slide."""
         items = feature_list.find_all("li")
-        for i, item in enumerate(items):
+        current_top = top
+        for item in items:
             text = get_text(item)
             if "\u2713" in text:
                 color = MS_GREEN
@@ -3127,16 +3271,18 @@ class HTMLToPPTXConverter:
                 color = MS_RED
             else:
                 color = WHITE
+            item_h = max(0.4, _estimate_text_height(text, 16, CONTENT_WIDTH))
             add_text_box(
                 slide,
                 text,
                 left=CONTENT_LEFT,
-                top=top + i * 0.4,
+                top=current_top,
                 width=CONTENT_WIDTH,
-                height=0.4,
+                height=item_h,
                 font_size=16,
                 color=color,
             )
+            current_top += item_h
 
     # ── Stats grid/row ───────────────────────────────────────────────────────
 
@@ -3223,13 +3369,16 @@ class HTMLToPPTXConverter:
             class_="quote-attribution"
         ) or quote.find_next_sibling(class_="quote-attr")
         if attribution:
+            attr_text = get_text(attribution)
+            attr_h = _estimate_text_height(attr_text, 14, CONTENT_WIDTH)
+            attr_h = max(0.3, attr_h)
             add_text_box(
                 slide,
-                get_text(attribution),
+                attr_text,
                 left=CONTENT_LEFT,
                 top=top + q_h,
                 width=CONTENT_WIDTH,
-                height=0.3,
+                height=attr_h,
                 font_size=14,
                 color=GRAY_50,
                 align=PP_ALIGN.CENTER,
